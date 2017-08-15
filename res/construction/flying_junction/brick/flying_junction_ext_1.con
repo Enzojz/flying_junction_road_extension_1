@@ -1,0 +1,83 @@
+local jMain = require "junction_ext"
+
+function data()
+    return {
+        type = "RAIL_STATION",
+        description = {
+            name = _("R/R"),
+            description = _("A flying junction that used to cross two lines, built in bricks")
+        },
+        availability = {
+            yearFrom = 1870
+        },
+        order = 27219,
+        params = jMain.params({"curvedLevel", "trRadiusA", "trSRadiusA", "trRadiusB", "trSRadiusB"}),
+        
+        updateFn = jMain.updateFn(function(params)
+            params.fRLowerA = -1
+            params.fRLowerB = -1
+            params.fRUpperA = 1
+            params.fRUpperB = 1
+            params.type = 1
+        end,
+        {
+            mSidePillar = "flying_junction/brick/pillar_side.mdl",
+            mRoofFenceF = "flying_junction/brick/roof_fence_front.mdl",
+            mRoofFenceS = "flying_junction/brick/roof_fence_side.mdl",
+            mRoof = "flying_junction/brick/roof.mdl",
+            bridgeType = "z_brick_flying_junction.lua",
+        },
+        {
+            country = {
+                type = {
+                    "country_old_small.lua",
+                    "country_old_medium.lua",
+                    "country_old_large_upgrade.lua",
+                    "country_old_large.lua"
+                },
+                width = {
+                    12, 18, 18, 24
+                },
+                offset = {
+                    {
+                        {-3.5, 0, 3.5},
+                        {-6.5, -1.5, 1.5, 6.5},
+                        {-6.5, -1.5, 1.5, 6.5},
+                        {-9.5, -4.5, 0, 4.5, 9.5},
+                    },
+                    {
+                        {-3.5, -2.5, 2.5, 3.5},
+                        {-6.5, -2.5, 2.5, 6.5},
+                        {-6.5, -2.5, 2.5, 6.5},
+                        {-9.5, -4.5, -2.5, 2.5, 4.5, 9.5},
+                    }
+                }
+            },
+            street = {
+                type = {
+                    "old_small.lua",
+                    "old_medium.lua",
+                    "old_large_upgrade.lua",
+                    "old_large.lua"
+                },
+                width = {
+                    12, 18, 18, 24
+                },
+                offset = {
+                    {
+                        {-3.5, 0, 3.5},
+                        {-6.5, -1.5, 1.5, 6.5},
+                        {-6.5, -1.5, 1.5, 6.5},
+                        {-9.5, -4.5, 0, 4.5, 9.5},
+                    },
+                    {
+                        {-3.5, -2.5, 2.5, 3.5},
+                        {-6.5, -2.5, 2.5, 6.5},
+                        {-6.5, -2.5, 2.5, 6.5},
+                        {-9.5, -4.5, -2.5, 2.5, 4.5, 9.5},
+                    }
+                }
+            },
+        })
+    }
+end

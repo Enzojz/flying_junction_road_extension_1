@@ -1,0 +1,83 @@
+local jMain = require "junction_ext"
+
+function data()
+    return {
+        type = "RAIL_STATION",
+        description = {
+            name = _("R/R"),
+            description = _("A flying junction that used to cross two lines, built in concrete")
+        },
+        availability = {
+            yearFrom = 1950
+        },
+        order = 27222,
+        params = jMain.params({"curvedLevel", "trRadiusA", "trSRadiusA", "trRadiusB", "trSRadiusB"}),
+        
+        updateFn = jMain.updateFn(function(params)
+            params.fRLowerA = params.fRLowerA or -1
+            params.fRLowerB = params.fRLowerB or -1
+            params.fRUpperA = params.fRUpperA or 1
+            params.fRUpperB = params.fRUpperB or 1
+            params.type = 1
+        end,
+        {
+            mSidePillar = "flying_junction/concrete/pillar_side.mdl",
+            mRoofFenceF = "flying_junction/concrete/roof_fence_front.mdl",
+            mRoofFenceS = "flying_junction/concrete/roof_fence_side.mdl",
+            mRoof = "flying_junction/concrete/roof.mdl",
+            bridgeType = "z_concrete_flying_junction.lua",
+        },
+        {
+            country = {
+                type = {
+                    "country_new_small.lua",
+                    "country_new_medium.lua",
+                    "country_new_large.lua",
+                    "country_new_x_large.lua"
+                },
+                width = {
+                    12, 18, 24, 32
+                },
+                offset = {
+                    {
+                        {-3.5, 0, 3.5},
+                        {-6.5, -1.5, 1.5, 6.5},
+                        {-9.5, -4.5, 0, 4.5, 9.5},
+                        {-13.5, -8.5, -3.5, 0, 3.5, 8.5, 13.5},
+                    },
+                    {
+                        {-3.5, -2.5, 2.5, 3.5},
+                        {-6.5, -2.5, 2.5, 6.5},
+                        {-9.5, -4.5, -2.5, 2.5, 4.5, 9.5},
+                        {-13.5, -8.5, -3.5, -2.5, 2.5, 3.5, 8.5, 13.5}
+                    }
+                }
+            },
+            street = {
+                type = {
+                    "new_small.lua",
+                    "new_medium.lua",
+                    "new_large.lua",
+                    "new_x_large.lua"
+                },
+                width = {
+                    12, 18, 24, 32
+                },
+                offset = {
+                    {
+                        {-3.5, 0, 3.5},
+                        {-6.5, -1.5, 1.5, 6.5},
+                        {-9.5, -4.5, 0, 4.5, 9.5},
+                        {-13.5, -8.5, -3.5, 0, 3.5, 8.5, 13.5},
+                    },
+                    {
+                        {-3.5, -2.5, 2.5, 3.5},
+                        {-6.5, -2.5, 2.5, 6.5},
+                        {-9.5, -4.5, -2.5, 2.5, 4.5, 9.5},
+                        {-13.5, -8.5, -3.5, -2.5, 2.5, 3.5, 8.5, 13.5}
+                    }
+                }
+            },
+        })
+    }
+end
