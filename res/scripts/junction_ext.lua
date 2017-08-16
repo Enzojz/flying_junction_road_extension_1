@@ -9,7 +9,7 @@ local station = require "flyingjunction/stationlib"
 local junction = require "junction"
 local jA = require "junction_assoc"
 local jM = require "junction_main"
-
+local dump = require "datadumper"
 local abs = math.abs
 local floor = math.floor
 local ceil = math.ceil
@@ -337,7 +337,11 @@ local updateFn = function(fParams, models, streetConfig)
                     tracks = streetGroup.offset[params.isRoadSp + 1][params.streetType + 1],
                     walls = params.isRoadSp == 0 and {-0.25 - streetWidth * 0.5, 0.25 + streetWidth * 0.5} or {-0.25 - streetWidth * 0.5, 0, 0.25 + streetWidth * 0.5}
                 } or offsets.lower,
-                upper = offsets.upper
+                upper = isUpperRoad
+                and {
+                    tracks = streetGroup.offset[1][params.streetType + 1],
+                    walls = {-0.25 - streetWidth * 0.5, 0.25 + streetWidth * 0.5}
+                } or offsets.upper,
             }
             
             local structureGroup = {
@@ -491,63 +495,18 @@ local updateFn = function(fParams, models, streetConfig)
                 B = jM.generateStructure(structureGroup.B.lower, structureGroup.B.upper, mTunnelZ * mDepth, models)[2]
             }
             
-            local slopeWalls = pipe.new
-                / (info.A.upper.isTerra
-                and {
-                    {
-                        lower = preparedExt.walls.lower.A[#preparedExt.walls.lower.A].guidelines[2],
-                        another = preparedExt.walls.lower.A[#preparedExt.walls.lower.A].guidelines[1],
-                        upper = preparedExt.walls.upper.A[1].guidelines[1],
-                        fz = preparedExt.walls.upper.A[1].fn.fz,
-                        from = "sup", to = "inf"
-                    },
-                    {
-                        lower = preparedExt.walls.lower.A[1].guidelines[2],
-                        another = preparedExt.walls.lower.A[1].guidelines[1],
-                        upper = preparedExt.walls.upper.A[1].guidelines[1],
-                        fz = preparedExt.walls.upper.A[1].fn.fz,
-                        from = "sup", to = "inf"
-                    }
-                } or {})
-                / (info.B.upper.isTerra
-                and {
-                    {
-                        lower = preparedExt.walls.lower.B[1].guidelines[1],
-                        another = preparedExt.walls.lower.B[1].guidelines[2],
-                        upper = preparedExt.walls.upper.B[#preparedExt.walls.upper.B].guidelines[1],
-                        fz = preparedExt.walls.upper.B[#preparedExt.walls.upper.B].fn.fz,
-                        from = "inf", to = "sup"
-                    },
-                    {
-                        lower = preparedExt.walls.lower.B[#preparedExt.walls.lower.B].guidelines[1],
-                        another = preparedExt.walls.lower.B[#preparedExt.walls.lower.B].guidelines[2],
-                        upper = preparedExt.walls.upper.B[#preparedExt.walls.upper.B].guidelines[1],
-                        fz = preparedExt.walls.upper.B[#preparedExt.walls.upper.B].fn.fz,
-                        from = "inf", to = "sup"
-                    },
-                } or {}
+            local slopeWallModels = jM.slopeWalls(
+                info,
+                models,
+                tunnelHeight * heightFactor,
+                preparedExt.walls.lower.A,
+                isLowerRoad and {structureGroup.A.lower.walls[1], structureGroup.A.lower.walls[#structureGroup.A.lower.walls]} or group.A.lower.walls,
+                preparedExt.walls.lower.B,
+                isLowerRoad and {structureGroup.B.lower.walls[1], structureGroup.B.lower.walls[#structureGroup.B.lower.walls]} or group.B.lower.walls,
+                preparedExt.walls.upper.A[1],
+                preparedExt.walls.upper.B[#preparedExt.walls.upper.B]
             )
-            local slopeWallModels = slopeWalls
-                * pipe.flatten()
-                * pipe.mapFlatten(function(sw)
-                    local loc = jM.detectSlopeIntersection(sw.lower, sw.upper, sw.fz, sw.lower[sw.from], sw.lower[sw.to] - sw.lower[sw.from])
-                    local arc = sw.lower:withLimits({
-                        [sw.from] = sw.lower[sw.from],
-                        [sw.to] = loc,
-                        mid = (sw.lower[sw.from] + loc) * 0.5
-                    })
-                    local mPlace = jM.mPlaceSlopeWall(sw, arc, tunnelHeight * heightFactor)
-                    
-                    return {
-                        junction.makeFn(models.mSidePillar, mPlace, coor.scaleY(1.05))(arc),
-                        junction.makeFn(models.mRoofFenceS, mPlace, coor.scaleY(1.05))(arc)
-                    }
-                end)
-                * pipe.flatten()
-                * pipe.flatten()
-            
-            
-            
+
             local function withIf(level, part)
                 return function(c)
                     return (info[part][level].used and not info[part][level].isBridge) and c or {}
@@ -577,20 +536,49 @@ local updateFn = function(fParams, models, streetConfig)
             )
             end
             
-            local slopeWallArcs = slopeWalls
+            local slopeWallArcs = pipe.new
+                / func.map(info.A.upper.isTerra and preparedExt.tracks.lower.A or {},
+                function(w)
+                    return {
+                        lower = w.guidelines[2]:withLimits({inf = w.guidelines[1]:extendLimits(4).inf}),
+                        upper = preparedExt.walls.upper.A[1].guidelines[1],
+                        fz = preparedExt.walls.upper.A[1].fn.fz,
+                        from = "sup", to = "inf"
+                    }
+                end)
+                / func.map(info.B.upper.isTerra and preparedExt.tracks.lower.B or {},
+                function(w)
+                    return {
+                        lower = w.guidelines[1]:withLimits({sup = w.guidelines[2]:extendLimits(4).sup}),
+                        upper = preparedExt.walls.upper.B[#preparedExt.walls.upper.B].guidelines[1],
+                        fz = preparedExt.walls.upper.B[#preparedExt.walls.upper.B].fn.fz,
+                        from = "inf", to = "sup"
+                    }
+                end)
                 * pipe.map(pipe.map(function(sw)
-                    local loc = jM.detectSlopeIntersection(sw.lower, sw.upper, sw.fz, sw.lower[sw.from], sw.lower[sw.to] - sw.lower[sw.from])
+                    local arcExt = isLowerRoad and {
+                        sw.lower + (streetWidth * 0.5),
+                        sw.lower + (streetWidth * 0.25),
+                        sw.lower + (-streetWidth * 0.5),
+                        sw.lower + (-streetWidth * 0.25),
+                    } or {
+                        sw.lower + 2.5,
+                        sw.lower + (-2.5),
+                    }
+
+                    local loc = func.min(
+                        func.map(arcExt, function(a) return jM.detectSlopeIntersection(a, sw.upper, sw.fz, a[sw.from], a[sw.to] - a[sw.from]) end),
+                        function(l, r) return abs(l - sw.lower[sw.to]) < abs(r - sw.lower[sw.to]) end)
+
                     return sw.lower:withLimits({
                         [sw.from] = loc,
-                        [sw.to] = sw.another:extendLimits(4)[sw.to],
-                        mid = loc
+                        [sw.to] = sw[sw.to],
                     })
                 end
                 ))
-                * pipe.map(pipe.map(function(ar) return junction.generatePolyArc({ar, ar}, "inf", "sup")(0, 2.5) end))
+                * pipe.map(pipe.map(function(ar) return junction.generatePolyArc({ar, ar}, "inf", "sup")(0, isLowerRoad and streetWidth * 0.5 or 2.5) end))
                 * function(ls) return {A = func.flatten(ls[1]), B = func.flatten(ls[2])} end
-            
-            
+                        
             local lPolys = function(part)
                 local i = info[part].lower
                 local polySet = ext.polys.lower[part]
