@@ -1,7 +1,6 @@
 local paramsutil = require "paramsutil"
 local func = require "flyingjunction/func"
 local coor = require "flyingjunction/coor"
-local arc = require "flyingjunction/coorarc"
 local trackEdge = require "flyingjunction/trackedge"
 local streetEdge = require "flyingjunction/streetedge"
 local pipe = require "flyingjunction/pipe"
@@ -9,11 +8,10 @@ local station = require "flyingjunction/stationlib"
 local junction = require "junction"
 local jA = require "junction_assoc"
 local jM = require "junction_main"
-local dump = require "datadumper"
+
 local abs = math.abs
 local floor = math.floor
 local ceil = math.ceil
-local pi = math.pi
 
 local listDegree = {5, 10, 20, 30, 40, 50, 60, 70, 80}
 local rList = {junction.infi * 0.001, 5, 3.5, 2, 1, 4 / 5, 2 / 3, 3 / 5, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 6, 1 / 8, 1 / 10, 1 / 20}
