@@ -61,6 +61,12 @@ local function params(paramFilter)
                 defaultIndex = 0
             },
             {
+                key = "roadSlopeFactor",
+                name = _("Road slope factor"),
+                values = func.map({1, 2, 3, 4, 5}, tostring),
+                defaultIndex = 3
+            },
+            {
                 key = "layout",
                 name = sp.._("Layout"),
                 values = {_("Rail") .. "/" .. _("Road"), _("Road") .. "/" .. _("Rail"), _("Road") .. "/" .. _("Road")},
@@ -389,8 +395,18 @@ local updateFn = function(fParams, models, streetConfig)
                     info = {
                         height = depth,
                         tunnelHeight = tunnelHeight,
-                        slopeA = trSlopeList[params.trSlopeA + 1] * 0.001,
-                        slopeB = trSlopeList[params.trSlopeB + 1] * 0.001,
+                        slope = {
+                            A = trSlopeList[params.trSlopeA + 1] * 0.001,
+                            B = trSlopeList[params.trSlopeB + 1] * 0.001
+                        },
+                        vRadius = {
+                            lower = isLowerRoad and 75 or 300,
+                            upper = isUpperRoad and 75 or 300,
+                        },
+                        slopeFactor = {
+                            lower = isLowerRoad and (params.roadSlopeFactor + 1) or 1,
+                            upper = isUpperRoad and (params.roadSlopeFactor + 1) or 1,
+                        },
                         frac = {
                             lower = {
                                 A = lengthPercentList[params.trLengthLowerA + 1],
