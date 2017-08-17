@@ -22,6 +22,75 @@ local heightList = {0, 1 / 4, 1 / 3, 1 / 2, 2 / 3, 3 / 4, 1, 1.1, 1.2, 1.25, 1.5
 local tunnelHeightList = {11, 10, 9.5, 8.7}
 local lengthPercentList = {1, 4 / 5, 3 / 4, 3 / 5, 1 / 2, 2 / 5, 1 / 4, 1 / 5}
 
+local pi = math.pi
+
+local ptXSelector = function(lhs, rhs) return lhs:length2() < rhs:length2() end
+
+local function generateStructure(lowerGroup, upperGroup, mDepth, models)
+    local function mPlace(guideline, rad1, rad2)
+        local rad = rad2 and (rad1 + rad2) * 0.5 or rad1
+        local pt = guideline:pt(rad)
+        return coor.rotZ(rad) * coor.trans(func.with(pt, {z = -11})) * mDepth
+    end
+    local mPlaceD = function(guideline, rad1, rad2)
+        local radc = (rad1 + rad2) * 0.5
+        return coor.rotZ(radc) * coor.trans(func.with(guideline:pt(radc), {z = -11}))
+    end
+    
+    local makeExtWall = junction.makeFn(models.mSidePillar, mPlaceD, coor.scaleY(1.05))
+    local makeExtWallFence = junction.makeFn(models.mRoofFenceS, mPlaceD, coor.scaleY(1.05))
+    local makeWall = junction.makeFn(models.mSidePillar, mPlace, coor.scaleY(1.05))
+    local makeRoof = junction.makeFn(models.mRoof, mPlace, coor.scaleY(1.05) * coor.transZ(0.05))
+    local makeSideFence = junction.makeFn(models.mRoofFenceS, mPlace)
+    local makeRoofFence = junction.makeFn(models.mRoofFenceS, mPlace, coor.transZ(-1.5))
+
+    local walls = lowerGroup.simpleWalls
+    
+    local upperFences = func.map(upperGroup.tracks, function(t)
+        return {
+            station.newModel(models.mSidePillar, coor.rotZ(pi * 0.5), coor.scaleX(1.1), coor.transY(-0.25), mPlace(t, t.inf)),
+            station.newModel(models.mSidePillar, coor.rotZ(pi * 0.5), coor.scaleX(1.1), coor.transY(0.25), mPlace(t, t.sup)),
+        }
+    end)
+    
+    return {
+        {
+            fixed = pipe.new
+            + func.mapFlatten(walls, function(w) return makeWall(w)[1] end)
+            + func.mapFlatten(upperGroup.tracks, function(t) return makeRoof(t)[1] end)
+            + func.mapFlatten(upperGroup.simpleWalls, function(t) return makeSideFence(t)[1] end)
+            + func.mapFlatten(upperGroup.simpleWalls, function(t) return makeRoofFence(t)[1] end)
+            ,
+            upper = pipe.new
+            + makeSideFence(upperGroup.walls[2])[1]
+            + makeWall(upperGroup.walls[2])[1]
+            + func.map(upperFences, pipe.select(1))
+            ,
+            lower = pipe.new
+            + makeExtWall(lowerGroup.extSimpleWalls[1])[1]
+            + makeExtWallFence(lowerGroup.extSimpleWalls[1])[1],
+        }
+        ,
+        {
+            fixed = pipe.new
+            + func.mapFlatten(walls, function(w) return makeWall(w)[2] end)
+            + func.mapFlatten(upperGroup.tracks, function(t) return makeRoof(t)[2] end)
+            + func.mapFlatten(upperGroup.simpleWalls, function(t) return makeSideFence(t)[2] end)
+            + func.mapFlatten(upperGroup.simpleWalls, function(t) return makeRoofFence(t)[2] end)
+            ,
+            upper = pipe.new
+            + makeSideFence(upperGroup.walls[1])[2]
+            + makeWall(upperGroup.walls[1])[2]
+            + func.map(upperFences, pipe.select(2))
+            ,
+            lower = pipe.new
+            + makeExtWall(lowerGroup.extSimpleWalls[2])[2]
+            + makeExtWallFence(lowerGroup.extSimpleWalls[2])[2]
+        }
+    }
+end
+
+
 local function params(paramFilter)
     local sp = "·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·\n"
     return pipe.new *
@@ -192,8 +261,14 @@ local function params(paramFilter)
                 defaultIndex = 1
             },
             {
+                key = "bridgeForm",
+                name = sp.."\n" .. _("Structure Form"),
+                values = {_("Simple"), _("Flying junction")},
+                defaultIndex = 1,
+            },
+            {
                 key = "isMir",
-                name = sp .. "\n" .. _("Mirrored"),
+                name = _("Mirrored"),
                 values = {_("No"), _("Yes")},
                 defaultIndex = 0
             },
@@ -504,35 +579,27 @@ local updateFn = function(fParams, models, streetConfig)
                 bridgeEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TUpperExtTracks,
             }
             
+            local structureGen = params.bridgeForm == 0 and generateStructure or jM.generateStructure
+
             local structure = {
-                A = jM.generateStructure(structureGroup.A.lower, structureGroup.A.upper, mTunnelZ * mDepth, models)[1],
-                B = jM.generateStructure(structureGroup.B.lower, structureGroup.B.upper, mTunnelZ * mDepth, models)[2]
+                A = structureGen(structureGroup.A.lower, structureGroup.A.upper, mTunnelZ * mDepth, models)[1],
+                B = structureGen(structureGroup.B.lower, structureGroup.B.upper, mTunnelZ * mDepth, models)[2]
             }
             
+            local innerWalls = params.bridgeForm == 0 and "simpleWalls" or "walls"
+
             local slopeWallModels = jM.slopeWalls(
                 info,
                 models,
                 tunnelHeight * heightFactor,
                 preparedExt.walls.lower.A,
-                isLowerRoad and {structureGroup.A.lower.walls[1], structureGroup.A.lower.walls[#structureGroup.A.lower.walls]} or group.A.lower.walls,
+                isLowerRoad and {structureGroup.A.lower[innerWalls][1], structureGroup.A.lower[innerWalls][#structureGroup.A.lower[innerWalls]]} or group.A.lower[innerWalls],
                 preparedExt.walls.lower.B,
-                isLowerRoad and {structureGroup.B.lower.walls[1], structureGroup.B.lower.walls[#structureGroup.B.lower.walls]} or group.B.lower.walls,
+                isLowerRoad and {structureGroup.B.lower[innerWalls][1], structureGroup.B.lower[innerWalls][#structureGroup.B.lower[innerWalls]]} or group.B.lower[innerWalls],
                 preparedExt.walls.upper.A[1],
                 preparedExt.walls.upper.B[#preparedExt.walls.upper.B]
             )
 
-            local function withIf(level, part)
-                return function(c)
-                    return (info[part][level].used and not info[part][level].isBridge) and c or {}
-                end
-            end
-            
-            local function withIf2(level, part)
-                return function(c)
-                    return (info[part][level].used and not info[part][level].isTerra and not info[part][level].isBridge) and c or {}
-                end
-            end
-            
             local uPolys = function(part)
                 local i = info[part].upper
                 local polySet = ext.polys.upper[part]
@@ -623,29 +690,44 @@ local updateFn = function(fParams, models, streetConfig)
                 slot = jM.projectPolys(mDepth * coor.transZ(-0.2))(lowerPolys.A, lowerPolys.B),
                 greater = jM.projectPolys(mDepth)(lowerPolys.A, lowerPolys.B)
             }
+            
+
+            local function withIfNotBridge(level, part)
+                return function(c)
+                    return (info[part][level].used and not info[part][level].isBridge) and c or {}
+                end
+            end
+            
+            local function withIfSolid(level, part)
+                return function(c)
+                    return (info[part][level].used and not info[part][level].isTerra and not info[part][level].isBridge) and c or {}
+                end
+            end
+            
+
             local result = {
                 edgeLists = edges,
                 models = pipe.new
                 + structure.A.fixed
                 + structure.B.fixed
-                + withIf2("upper", "A")(ext.surface.upper.A)
-                + withIf2("upper", "B")(ext.surface.upper.B)
+                + withIfSolid("upper", "A")(ext.surface.upper.A)
+                + withIfSolid("upper", "B")(ext.surface.upper.B)
                 + (heightFactor > 0
                 and pipe.new
                 + structure.A.upper
                 + structure.B.upper
-                + withIf2("upper", "A")(ext.walls.upper.A * pipe.flatten())
-                + withIf2("upper", "B")(ext.walls.upper.B * pipe.flatten())
+                + withIfSolid("upper", "A")(ext.walls.upper.A * pipe.flatten())
+                + withIfSolid("upper", "B")(ext.walls.upper.B * pipe.flatten())
                 or {}
                 )
                 + (heightFactor < 1
                 and pipe.new
                 + structure.A.lower
                 + structure.B.lower
-                + withIf("lower", "A")(ext.walls.lower.A[1])
-                + withIf("lower", "A")(ext.walls.lower.A[#ext.walls.lower.A])
-                + withIf("lower", "B")(ext.walls.lower.B[1])
-                + withIf("lower", "B")(ext.walls.lower.B[#ext.walls.lower.B])
+                + withIfNotBridge("lower", "A")(ext.walls.lower.A[1])
+                + withIfNotBridge("lower", "A")(ext.walls.lower.A[#ext.walls.lower.A])
+                + withIfNotBridge("lower", "B")(ext.walls.lower.B[1])
+                + withIfNotBridge("lower", "B")(ext.walls.lower.B[#ext.walls.lower.B])
                 or {})
                 + slopeWallModels
                 ,
