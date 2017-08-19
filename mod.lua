@@ -15,7 +15,7 @@
                     tfnetId = 27218,
                 },
             },
-            tags = {"Train Station", "Station", "Bridge", "Track"},
+            tags = {"Train Station", "Station", "Bridge", "Track", "Railroad Crossing"},
         },
     }
 end

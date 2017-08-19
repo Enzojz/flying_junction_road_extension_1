@@ -1,24 +1,29 @@
 local jMain = require "junction_ext"
+local func = require "flyingjunction/func"
 
 function data()
     return {
         type = "STREET_STATION",
         description = {
-            name = _("Rail/Road Crossing"),
-            description = _("A flyover rail/road crossing, built in concrete")
+            name = _("Rail/Road Exchange Crossing"),
+            description = _("A flyover rail/road crossing for exchang positions, built in concrete")
         },
         availability = {
             yearFrom = 1950
         },
-        order = 27222,
-        params = jMain.params({"curvedLevel", "trRadiusA", "trSRadiusA", "trRadiusB", "trSRadiusB"}),
+        order = 27223,
+        params = jMain.params({"curvedLevel", "rLower", "rUpper", "sLower", "sUpper"}),
         
         updateFn = jMain.updateFn(function(params)
-            params.fRLowerA = params.fRLowerA or -1
-            params.fRLowerB = params.fRLowerB or -1
-            params.fRUpperA = params.fRUpperA or 1
-            params.fRUpperB = params.fRUpperB or 1
-            params.type = 1
+            params.rLower = params.layout == 0 and #jMain.rList - 1 or 0
+            params.rUpper = params.layout == 1 and #jMain.rList - 1 or 0
+            params.fRLowerA = 1
+            params.fRLowerB = -1
+            params.fRUpperA = -1
+            params.fRUpperB = 1
+            params.sLower = 1
+            params.sUpper = 0
+            params.type = 2
         end,
         {
             mSidePillar = "flying_junction/concrete/pillar_side.mdl",

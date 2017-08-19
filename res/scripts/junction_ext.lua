@@ -99,8 +99,8 @@ local function params(paramFilter)
             paramsutil.makeTrackCatenaryParam(),
             {
                 key = "nbTracks",
-                name = _("Number of lower tracks"),
-                values = {_("1"), _("2"), _("3"), _("4"), _("5"), _("6"), },
+                name = _("Number of tracks"),
+                values = {_("1"), _("2"), _("3"), _("4"), _("5"), _("6"), _("7"), _("8"), _("10") },
                 defaultIndex = 1
             },
             {
@@ -112,7 +112,7 @@ local function params(paramFilter)
             {
                 key = "streetUsage",
                 name = sp,
-                values = {"Street", "Road"},
+                values = {_("Street"), _("Route")},
                 defaultIndex = 1
             },
             {
@@ -312,7 +312,9 @@ local function defaultParams(param, fParams)
         return function(v) return v and v < u and v or d end
     end
     
-    func.forEach(params({}), function(i)param[i.key] = limiter(i.defaultIndex or 0, #i.values)(param[i.key]) end)
+    func.forEach(
+        func.filter(params({}), function(p) return p.key ~= "tramTrack" end),
+        function(i)param[i.key] = limiter(i.defaultIndex or 0, #i.values)(param[i.key]) end)
     
     fParams(param)
 end
@@ -357,8 +359,8 @@ local updateFn = function(fParams, models, streetConfig)
                 A = {
                     lower = {
                         nbTracks = isLowerRoad and 1 or params.nbTracks + 1,
-                        r = retriveR(params.rLower) * (params.sLower == 0 and 1 or -1),
-                        rFactor = params.sLower == 0 and 1 or -1,
+                        r = retriveR(params.rLower) * params.fRLowerA * (params.sLower == 1 and 1 or -1) * (params.type == 3 and -1 or 1),
+                        rFactor = params.fRLowerA * (params.sLower == 1 and 1 or -1) * (params.type == 3 and -1 or 1),
                         rad = 0,
                         used = func.contains({0, 1}, params.transitionA),
                         isBridge = false,
@@ -367,20 +369,20 @@ local updateFn = function(fParams, models, streetConfig)
                     },
                     upper = {
                         nbTracks = isUpperRoad and 1 or params.nbTracks + 1,
-                        r = retriveR(params.rUpper) * (params.sUpper == 0 and 1 or -1),
-                        rFactor = params.sUpper == 0 and 1 or -1,
+                        r = retriveR(params.rUpper) * params.fRUpperA * (params.sUpper == 0 and 1 or -1),
+                        rFactor = params.fRUpperA * (params.sUpper == 0 and 1 or -1),
                         rad = rad,
                         used = func.contains({0, 2}, params.transitionA),
                         isBridge = params.typeSlopeA == 0 or not func.contains({0, 2}, params.transitionA),
-                        isTerra = params.typeSlopeA == 1 and func.contains({0, 2}, params.transitionA),
+                        isTerra = params.typeSlopeA == 1 and func.contains({0, 2}, params.transitionA) and params.type ~= 2,
                         extR = (params.trSRadiusA == 0 and 1 or -1) * retriveR(params.trRadiusA)
                     }
                 },
                 B = {
                     lower = {
                         nbTracks = isLowerRoad and 1 or params.nbTracks + 1,
-                        r = retriveR(params.rLower) * (params.sLower == 0 and 1 or -1),
-                        rFactor = params.sLower == 0 and 1 or -1,
+                        r = retriveR(params.rLower) * params.fRLowerB * (params.sLower == 1 and 1 or -1) * (params.type == 3 and -1 or 1),
+                        rFactor = params.fRLowerB * (params.sLower == 1 and 1 or -1) * (params.type == 3 and -1 or 1),
                         rad = 0,
                         used = func.contains({0, 1}, params.transitionB),
                         isBridge = false,
@@ -389,12 +391,12 @@ local updateFn = function(fParams, models, streetConfig)
                     },
                     upper = {
                         nbTracks = isUpperRoad and 1 or params.nbTracks + 1,
-                        r = retriveR(params.rUpper) * (params.sUpper == 0 and 1 or -1),
-                        rFactor = params.sUpper == 0 and 1 or -1,
+                        r = retriveR(params.rUpper) * params.fRUpperB * (params.sUpper == 0 and 1 or -1),
+                        rFactor = params.fRUpperB * (params.sUpper == 0 and 1 or -1),
                         rad = rad,
                         used = func.contains({0, 2}, params.transitionB),
                         isBridge = params.typeSlopeB == 0 or not func.contains({0, 2}, params.transitionB),
-                        isTerra = params.typeSlopeB == 1 and func.contains({0, 2}, params.transitionB),
+                        isTerra = params.typeSlopeB == 1 and func.contains({0, 2}, params.transitionB) and params.type ~= 2,
                         extR = (params.trSRadiusB == 0 and 1 or -1) * retriveR(params.trRadiusB)
                     }
                 }
