@@ -20,11 +20,9 @@ local trSlopeList = {15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 100
 local slopeList = {0, 10, 20, 25, 30, 35, 40, 50, 60}
 local heightList = {0, 1 / 4, 1 / 3, 1 / 2, 2 / 3, 3 / 4, 1, 1.1, 1.2, 1.25, 1.5}
 local tunnelHeightList = {11, 10, 9.5, 8.7}
-local lengthPercentList = {1, 4 / 5, 3 / 4, 3 / 5, 1 / 2, 2 / 5, 1 / 4, 1 / 5}
+local lengthPercentList = {1, 4 / 5, 3 / 4, 3 / 5, 1 / 2, 2 / 5, 1 / 4, 1 / 5, 1 / 10, 1 / 20}
 
 local pi = math.pi
-
-local ptXSelector = function(lhs, rhs) return lhs:length2() < rhs:length2() end
 
 local function generateStructure(lowerGroup, upperGroup, mDepth, models)
     local function mPlace(guideline, rad1, rad2)
@@ -486,12 +484,12 @@ local updateFn = function(fParams, models, streetConfig)
                         },
                         frac = {
                             lower = {
-                                A = lengthPercentList[params.trLengthLowerA + 1],
-                                B = lengthPercentList[params.trLengthLowerB + 1]
+                                A = heightFactor >= 1 and 1 or lengthPercentList[params.trLengthLowerA + 1],
+                                B = heightFactor >= 1 and 1 or lengthPercentList[params.trLengthLowerB + 1]
                             },
                             upper = {
-                                A = lengthPercentList[params.trLengthUpperA + 1],
-                                B = lengthPercentList[params.trLengthUpperB + 1]
+                                A = heightFactor == 0 and 1 or lengthPercentList[params.trLengthUpperA + 1],
+                                B = heightFactor == 0 and 1 or lengthPercentList[params.trLengthUpperB + 1]
                             }
                         }
                     }

@@ -1,13 +1,66 @@
 local descEN = [[With this mod it's possible to construct rail/road flying intersections is different forms.
-The flying junction mod is needed to use it.]]
+
+
+Implemented functions:
+* Crossing angle between 5° and 89° with increment of 1°
+* Seperation of lower level
+* Independent adjustment of cuvres of road/track
+* Left handed or right handed
+* Built in concrete or stone bricks
+* Raising or trenche transition tracks in possible forms of bridge, terra or solid construction.
+* Flying-junction-like structure or bridge-like structure
+* Build with slope
+* Altitude Adjustment
+
+ATTENTION:
+The flying junction mod is needed to use it.
+
+Changelog
+1.1
+* Fixed crash when modifying lower level length when altitude equals to or greater than 100%, or higher level when altitude is 0%
+]]
 
 
 local descFR = [[Avec ce mod c'est possible de construir le pont rail/route sous formes différentes.
-Le mod "Saut de mouton" est exigé pour son utilisation.]]
+
+Caractéristiques:
+* Angle de croisement entre 5° et 89° avec incrément de 1°
+* Séparation des voies dans la tunnel
+* Changement indépendant de courbure des voies
+* Gaucher ou droitier
+* Construction en pente
+* Voies de transition montant/désendant sous formes de pont, terre ou construction solide.
+* Structure comme saut de mouton ou comme pont simple
+* Changement d'altitude
+* Construction en concrete ou pierre de taille
+
+ATTENTION:
+Le mod "Saut de mouton" est exigé pour son utilisation.
+
+Changelog:
+1.1
+* Correction de plantage lors modification du longueur du niveau bas, quand l'altitude est équal à ou superieur à 100%, ou pour le niveau haut quand l'altitude est à 0%.]]
 
 
 local descCN = [[本MOD提供建设各种形式立体道口和公路立交的可能。
-需要同“欧式疏解桥”MOD一起使用。]]
+
+特点:
+* 5°到89°度的交汇角，调整幅度为1°
+* 隧道里面可以设置分组
+* 四个独立的轨道曲线调整选项
+* 坡度选项
+* 高度选项
+* 水泥或石砖建造
+* 上升/下降的过渡轨道可以以桥、堆土或者实心形式展现
+* 整体结构可以为桥或者疏解桥
+
+注意：
+需要同“欧式疏解桥”MOD一起使用。
+
+
+Changelog:
+1.1
+* 修复了在高度调整为100%或者更高的情况下，修改下层长度，以及在高度调整为0%修改上层长度时引发的游戏崩溃]]
 
 
 function data()
