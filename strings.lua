@@ -16,6 +16,8 @@ ATTENTION:
 The flying junction mod is needed to use it.
 
 Changelog
+1.2
+* Fixed track number count bug
 1.1
 * Fixed crash when modifying lower level length when altitude equals to or greater than 100%, or higher level when altitude is 0%
 ]]
@@ -38,6 +40,8 @@ ATTENTION:
 Le mod "Saut de mouton" est exigé pour son utilisation.
 
 Changelog:
+1.2
+* Correction de nombre de voie
 1.1
 * Correction de plantage lors modification du longueur du niveau bas, quand l'altitude est équal à ou superieur à 100%, ou pour le niveau haut quand l'altitude est à 0%.]]
 
@@ -59,6 +63,8 @@ local descCN = [[本MOD提供建设各种形式立体道口和公路立交的可
 
 
 Changelog:
+1.2
+* 修正了错误的轨道数
 1.1
 * 修复了在高度调整为100%或者更高的情况下，修改下层长度，以及在高度调整为0%修改上层长度时引发的游戏崩溃]]
 
