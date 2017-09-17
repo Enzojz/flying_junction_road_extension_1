@@ -22,6 +22,8 @@ local heightList = {0, 1 / 4, 1 / 3, 1 / 2, 2 / 3, 3 / 4, 1, 1.1, 1.2, 1.25, 1.5
 local tunnelHeightList = {11, 10, 9.5, 8.7}
 local lengthPercentList = {1, 4 / 5, 3 / 4, 3 / 5, 1 / 2, 2 / 5, 1 / 4, 1 / 5, 1 / 10, 1 / 20}
 
+local nbTracksList = {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14}
+
 local pi = math.pi
 
 local function generateStructure(lowerGroup, upperGroup, mDepth, models)
@@ -98,7 +100,7 @@ local function params(paramFilter)
             {
                 key = "nbTracks",
                 name = _("Number of tracks"),
-                values = {_("1"), _("2"), _("3"), _("4"), _("5"), _("6"), _("7"), _("8"), _("10") },
+                values = func.map(nbTracksList, tostring),
                 defaultIndex = 1
             },
             {
@@ -345,8 +347,9 @@ local updateFn = function(fParams, models, streetConfig)
             local isUpperRoad = func.contains({1, 2}, params.layout)
             local isLowerRoad = func.contains({0, 2}, params.layout)
             
+            local nbTracks = nbTracksList[params.nbTracks + 1]
 
-            local nbPerGroup = ({1, 2, params.nbTracks + 1})[params.nbPerGroup + 1]
+            local nbPerGroup = ({1, 2, nbTracks})[params.nbPerGroup + 1]
 
             local TLowerTracks = isLowerRoad and streetBuilder.nonAligned() or trackBuilder.nonAligned()
             local TUpperTracks = isUpperRoad and streetBuilder.nonAligned() or trackBuilder.nonAligned()
@@ -356,7 +359,7 @@ local updateFn = function(fParams, models, streetConfig)
             local info = {
                 A = {
                     lower = {
-                        nbTracks = isLowerRoad and 1 or params.nbTracks + 1,
+                        nbTracks = isLowerRoad and 1 or nbTracks,
                         r = retriveR(params.rLower) * params.fRLowerA * (params.sLower == 1 and 1 or -1) * (params.type == 3 and -1 or 1),
                         rFactor = params.fRLowerA * (params.sLower == 1 and 1 or -1) * (params.type == 3 and -1 or 1),
                         rad = 0,
@@ -366,7 +369,7 @@ local updateFn = function(fParams, models, streetConfig)
                         extR = (params.trSRadiusA == 0 and 1 or -1) * retriveR(params.trRadiusA)
                     },
                     upper = {
-                        nbTracks = isUpperRoad and 1 or params.nbTracks + 1,
+                        nbTracks = isUpperRoad and 1 or nbTracks,
                         r = retriveR(params.rUpper) * params.fRUpperA * (params.sUpper == 0 and 1 or -1),
                         rFactor = params.fRUpperA * (params.sUpper == 0 and 1 or -1),
                         rad = rad,
@@ -378,7 +381,7 @@ local updateFn = function(fParams, models, streetConfig)
                 },
                 B = {
                     lower = {
-                        nbTracks = isLowerRoad and 1 or params.nbTracks + 1,
+                        nbTracks = isLowerRoad and 1 or nbTracks,
                         r = retriveR(params.rLower) * params.fRLowerB * (params.sLower == 1 and 1 or -1) * (params.type == 3 and -1 or 1),
                         rFactor = params.fRLowerB * (params.sLower == 1 and 1 or -1) * (params.type == 3 and -1 or 1),
                         rad = 0,
@@ -388,7 +391,7 @@ local updateFn = function(fParams, models, streetConfig)
                         extR = (params.trSRadiusB == 0 and 1 or -1) * retriveR(params.trRadiusB)
                     },
                     upper = {
-                        nbTracks = isUpperRoad and 1 or params.nbTracks + 1,
+                        nbTracks = isUpperRoad and 1 or nbTracks,
                         r = retriveR(params.rUpper) * params.fRUpperB * (params.sUpper == 0 and 1 or -1),
                         rFactor = params.fRUpperB * (params.sUpper == 0 and 1 or -1),
                         rad = rad,
@@ -573,12 +576,11 @@ local updateFn = function(fParams, models, streetConfig)
                 * pipe.filter(function(e) return not e.b end)
                 * pipe.map(pipe.select("e"))
             
-            local edges = {
-                lowerEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TLowerTracks,
-                solidEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TUpperTracks,
-                bridgeEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TUpperExtTracks,
-            }
-            
+            local edges = pipe.new
+                / (solidEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TUpperTracks)
+                / (bridgeEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TUpperExtTracks)
+                / (lowerEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TLowerTracks)
+
             local structureGen = params.bridgeForm == 0 and generateStructure or jM.generateStructure
 
             local structure = {
@@ -608,11 +610,11 @@ local updateFn = function(fParams, models, streetConfig)
                     or (
                     i.isTerra
                     and {
-                        equal = jM.projectPolys(coor.I())(polySet.trackPolys)
+                        equal = station.projectPolys(coor.I())(polySet.trackPolys)
                     }
                     or {
-                        greater = jM.projectPolys(coor.I())(polySet.polys),
-                        less = jM.projectPolys(coor.I())(polySet.trackPolys)
+                        greater = station.projectPolys(coor.I())(polySet.polys),
+                        less = station.projectPolys(coor.I())(polySet.trackPolys)
                     }
             )
             end
@@ -666,29 +668,29 @@ local updateFn = function(fParams, models, streetConfig)
                 return (not i.used)
                     and {}
                     or {
-                        less = jM.projectPolys(coor.I())(info[part].upper.isTerra and slopeWallArcs[part] or polySet.polys),
-                        slot = jM.projectPolys(coor.I())(polySet.trackPolys),
-                        greater = jM.projectPolys(coor.I())(polySet.trackPolys)
+                        less = station.projectPolys(coor.I())(info[part].upper.isTerra and slopeWallArcs[part] or polySet.polys),
+                        slot = station.projectPolys(coor.I())(polySet.trackPolys),
+                        greater = station.projectPolys(coor.I())(polySet.trackPolys)
                     }
             end
             
             local uXPolys = {
                 equal = pipe.new
-                + ((info.A.upper.isTerra or heightFactor == 0) and jM.projectPolys(mTunnelZ * mDepth)(upperPolys.A) or {})
-                + ((info.B.upper.isTerra or heightFactor == 0) and jM.projectPolys(mTunnelZ * mDepth)(upperPolys.B) or {})
+                + ((info.A.upper.isTerra or heightFactor == 0) and station.projectPolys(mTunnelZ * mDepth)(upperPolys.A) or {})
+                + ((info.B.upper.isTerra or heightFactor == 0) and station.projectPolys(mTunnelZ * mDepth)(upperPolys.B) or {})
                 ,
                 less = pipe.new
-                + ((not info.A.upper.isTerra and heightFactor ~= 0) and jM.projectPolys(mTunnelZ * mDepth)(upperPolys.A) or {})
-                + ((not info.B.upper.isTerra and heightFactor ~= 0) and jM.projectPolys(mTunnelZ * mDepth)(upperPolys.B) or {})
+                + ((not info.A.upper.isTerra and heightFactor ~= 0) and station.projectPolys(mTunnelZ * mDepth)(upperPolys.A) or {})
+                + ((not info.B.upper.isTerra and heightFactor ~= 0) and station.projectPolys(mTunnelZ * mDepth)(upperPolys.B) or {})
                 ,
-                greater = pipe.new + (info.A.upper.isTerra and {} or jM.projectPolys(mDepth)(upperPolys.A))
-                + (info.B.upper.isTerra and {} or jM.projectPolys(mDepth)(upperPolys.B))
+                greater = pipe.new + (info.A.upper.isTerra and {} or station.projectPolys(mDepth)(upperPolys.A))
+                + (info.B.upper.isTerra and {} or station.projectPolys(mDepth)(upperPolys.B))
             }
             
             local lXPolys = {
-                less = jM.projectPolys(coor.I())(info.A.upper.isTerra and {} or lowerPolys.A, info.B.upper.isTerra and {} or lowerPolys.B),
-                slot = jM.projectPolys(mDepth * coor.transZ(-0.2))(lowerPolys.A, lowerPolys.B),
-                greater = jM.projectPolys(mDepth)(lowerPolys.A, lowerPolys.B)
+                less = station.projectPolys(coor.I())(info.A.upper.isTerra and {} or lowerPolys.A, info.B.upper.isTerra and {} or lowerPolys.B),
+                slot = station.projectPolys(mDepth * coor.transZ(-0.2))(lowerPolys.A, lowerPolys.B),
+                greater = station.projectPolys(mDepth)(lowerPolys.A, lowerPolys.B)
             }
             
 
@@ -731,7 +733,7 @@ local updateFn = function(fParams, models, streetConfig)
                 or {})
                 + slopeWallModels
                 ,
-                terrainAlignmentLists = jM.mergePoly(uXPolys, uPolys("A"), uPolys("B")) + jM.mergePoly(lXPolys, lPolys("A"), lPolys("B"))
+                terrainAlignmentLists = station.mergePoly(uXPolys, uPolys("A"), uPolys("B"))() + station.mergePoly(lXPolys, lPolys("A"), lPolys("B"))()
                 ,
                 groundFaces = (pipe.new
                 + upperPolys.A
