@@ -16,6 +16,8 @@ ATTENTION:
 The flying junction mod is needed to use it.
 
 Changelog
+1.4
+* CommonAPI support
 1.3
 * Fixed catenary construction error before it's apperance
 1.2
@@ -42,6 +44,8 @@ ATTENTION:
 Le mod "Saut de mouton" est exigé pour son utilisation.
 
 Changelog:
+1.4
+* Support de CommonAPI
 1.3
 * Correction d'erreur de caténaire construit avant son époque d'existance
 1.2
@@ -67,6 +71,8 @@ local descCN = [[本MOD提供建设各种形式立体道口和公路立交的可
 
 
 Changelog:
+1.4
+* 增加了CommonAPI支持
 1.3
 * 修正了在接触网出现年代之前的接触网建造错误
 1.2

@@ -24,6 +24,34 @@ local lengthPercentList = {1, 4 / 5, 3 / 4, 3 / 5, 1 / 2, 2 / 5, 1 / 4, 1 / 5, 1
 
 local nbTracksList = {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14}
 
+local trackList = {"standard.lua", "high_speed.lua"}
+local trackWidthList = {5, 5}
+local trackType = pipe.exec * function()
+    local list = {
+        {
+            key = "trackType",
+            name = _("Track type"),
+            values = {_("Standard"), _("High-speed")},
+            yearFrom = 1925,
+            yearTo = 0
+        },
+        {
+            key = "catenary",
+            name = _("Catenary"),
+            values = {_("No"), _("Yes")},
+            defaultIndex = 1,
+            yearFrom = 1910,
+            yearTo = 0
+        }
+    }
+    if (commonapi and commonapi.uiparameter) then
+        commonapi.uiparameter.modifyTrackCatenary(list, {selectionlist = trackList})
+        trackWidthList = func.map(trackList, function(e) return commonapi.repos.track.getByName(e).data.trackDistance end)
+    end
+    
+    return pipe.new * list
+end
+
 local pi = math.pi
 
 local function generateStructure(lowerGroup, upperGroup, mDepth, models)
@@ -93,7 +121,7 @@ end
 
 local function params(paramFilter)
     local sp = "·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·\n"
-    return pipe.new *
+    return (pipe.new * trackType +
         {
             paramsutil.makeTrackTypeParam(),
             paramsutil.makeTrackCatenaryParam(),
@@ -302,7 +330,7 @@ local function params(paramFilter)
                 values = func.map(heightList, function(h) return tostring(ceil(h * 100)) .. "%" end),
                 defaultIndex = 6
             }
-        }
+        })
         * pipe.filter(function(p) return not func.contains(paramFilter, p.key) end)
 
 end
@@ -330,7 +358,7 @@ local updateFn = function(fParams, models, streetConfig)
             local deg = listDegree[params.xDegDec + 1] + params.xDegUni
             local rad = math.rad(deg)
             
-            local trackType = ({"standard.lua", "high_speed.lua"})[params.trackType + 1]
+            local trackType = trackList[params.trackType + 1]
             local catenary = params.catenary == 1 -- and catenary
             local streetGroup = streetConfig[params.streetUsage == 0 and "street" or "country"]
             local streetType = streetGroup.type[params.streetType + 1]
