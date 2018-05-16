@@ -123,8 +123,6 @@ local function params(paramFilter)
     local sp = "·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·\n"
     return (pipe.new * trackType +
         {
-            paramsutil.makeTrackTypeParam(),
-            paramsutil.makeTrackCatenaryParam(),
             {
                 key = "nbTracks",
                 name = _("Number of tracks"),
