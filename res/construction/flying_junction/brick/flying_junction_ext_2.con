@@ -26,10 +26,10 @@ function data()
             params.type = 2
         end,
         {
-            mSidePillar = "flying_junction/brick/pillar_side.mdl",
-            mRoofFenceF = "flying_junction/brick/roof_fence_front.mdl",
-            mRoofFenceS = "flying_junction/brick/roof_fence_side.mdl",
-            mRoof = "flying_junction/brick/roof.mdl",
+            mSidePillar = "flying_junction/brick/pillar_side",
+            mRoofFenceF = "flying_junction/brick/roof_fence_front",
+            mRoofFenceS = "flying_junction/brick/roof_fence_side",
+            mRoof = "flying_junction/brick/roof",
             bridgeType = "z_brick_flying_junction.lua",
         },
         {
@@ -51,10 +51,10 @@ function data()
                         {-9.5, -4.5, 0, 4.5, 9.5},
                     },
                     {
-                        {-3.5, -2.5, 2.5, 3.5},
-                        {-6.5, -2.5, 2.5, 6.5},
-                        {-6.5, -2.5, 2.5, 6.5},
-                        {-9.5, -4.5, -2.5, 2.5, 4.5, 9.5},
+                        {-3.5, -2.75, 2.75, 3.5},
+                        {-6.5, -2.75, 2.75, 6.5},
+                        {-6.5, -2.75, 2.75, 6.5},
+                        {-9.5, -4.5, -2.75, 2.75, 4.5, 9.5},
                     }
                 }
             },
@@ -76,10 +76,10 @@ function data()
                         {-9.5, -4.5, 0, 4.5, 9.5},
                     },
                     {
-                        {-3.5, -2.5, 2.5, 3.5},
-                        {-6.5, -2.5, 2.5, 6.5},
-                        {-6.5, -2.5, 2.5, 6.5},
-                        {-9.5, -4.5, -2.5, 2.5, 4.5, 9.5},
+                        {-3.5, -2.75, 2.75, 3.5},
+                        {-6.5, -2.75, 2.75, 6.5},
+                        {-6.5, -2.75, 2.75, 6.5},
+                        {-9.5, -4.5, -2.75, 2.75, 4.5, 9.5},
                     }
                 }
             },

@@ -16,6 +16,8 @@ ATTENTION:
 The flying junction mod is needed to use it.
 
 Changelog
+1.5
+* Update to be compatible with Flying junction 1.15
 1.4
 * CommonAPI support
 1.3
@@ -44,6 +46,8 @@ ATTENTION:
 Le mod "Saut de mouton" est exigé pour son utilisation.
 
 Changelog:
+1.5
+* Mise à jour pour être compatible avec Saut de mouton 1.15
 1.4
 * Support de CommonAPI
 1.3
@@ -71,6 +75,8 @@ local descCN = [[本MOD提供建设各种形式立体道口和公路立交的可
 
 
 Changelog:
+1.5
+* 欧式疏解1.15版兼容升级
 1.4
 * 增加了CommonAPI支持
 1.3
