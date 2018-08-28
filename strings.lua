@@ -17,7 +17,7 @@ The flying junction mod is needed to use it.
 
 Changelog
 1.6
-* Model errors are fixed when mirrored is set on
+* Model errors when mirrored is set on are fixed
 1.5
 * Update to be compatible with Flying junction 1.15
 1.4
@@ -48,6 +48,8 @@ ATTENTION:
 Le mod "Saut de mouton" est exigé pour son utilisation.
 
 Changelog:
+1.6
+* Correction des erreurs des maquettes lors l'infrastructure est en miroir
 1.5
 * Mise à jour pour être compatible avec Saut de mouton 1.15
 1.4
@@ -77,6 +79,8 @@ local descCN = [[本MOD提供建设各种形式立体道口和公路立交的可
 
 
 Changelog:
+1.6
+* 修正了镜像下的模型错误
 1.5
 * 欧式疏解1.15版兼容升级
 1.4
