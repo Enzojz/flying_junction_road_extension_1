@@ -563,8 +563,8 @@ local updateFn = function(fParams, models, streetConfig)
                             B = (isLowerRoad and jA.retrivePolys(4, streetWidth * 0.5 + 1) or jA.retrivePolys())(preparedExt.tracks.lower.B)
                         }
                     },
-                    surface = jM.retriveX(jA.retriveTrackSurfaces, preparedExt.tracks),
-                    walls = jM.retriveX(jA.retriveWalls, preparedExt.walls)
+                    surface = jM.retriveX(jA.retriveTrackSurfaces(fitModel, fitModel2D), preparedExt.tracks),
+                    walls = jM.retriveX(jA.retriveWalls(fitModel, fitModel2D), preparedExt.walls)
                 }, preparedExt
             end)()
             
