@@ -16,6 +16,8 @@ ATTENTION:
 The flying junction mod is needed to use it.
 
 Changelog
+1.6
+* Model errors are fixed when mirrored is set on
 1.5
 * Update to be compatible with Flying junction 1.15
 1.4
