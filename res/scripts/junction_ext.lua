@@ -9,9 +9,11 @@ local junction = require "junction"
 local jA = require "junction_assoc"
 local jM = require "junction_main"
 
+local math = math
 local abs = math.abs
 local floor = math.floor
 local ceil = math.ceil
+local unpack = table.unpack
 
 local listDegree = {5, 10, 20, 30, 40, 50, 60, 70, 80}
 local rList = {junction.infi * 0.001, 5, 3.5, 2, 1, 4 / 5, 2 / 3, 3 / 5, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 6, 1 / 8, 1 / 10, 1 / 20}
@@ -86,10 +88,10 @@ local function generateStructure(fitModel, fitModel2D)
             local outer = t + 2.5
             local diff = (t.inf > t.sup and 0.5 or -0.5) / t.r
             return {
-                station.newModel(models.mSidePillar.."_tl.mdl", coor.rotZ(pi * 0.5), mPlace(fitModel2D(5, 0.5)(false, true), inner, outer, t.inf, t.inf - diff)),
-                station.newModel(models.mSidePillar.."_br.mdl", coor.rotZ(pi * 0.5), mPlace(fitModel2D(5, 0.5)(true, false), inner, outer, t.inf, t.inf - diff)),
-                station.newModel(models.mSidePillar.."_tl.mdl", coor.rotZ(pi * 0.5), mPlace(fitModel2D(5, 0.5)(false, true), inner, outer, t.sup, t.sup + diff)),
-                station.newModel(models.mSidePillar.."_br.mdl", coor.rotZ(pi * 0.5), mPlace(fitModel2D(5, 0.5)(true, false), inner, outer, t.sup, t.sup + diff))
+                station.newModel(models.mSidePillar .. "_tl.mdl", coor.rotZ(pi * 0.5), mPlace(fitModel2D(5, 0.5)(false, true), inner, outer, t.inf, t.inf - diff)),
+                station.newModel(models.mSidePillar .. "_br.mdl", coor.rotZ(pi * 0.5), mPlace(fitModel2D(5, 0.5)(true, false), inner, outer, t.inf, t.inf - diff)),
+                station.newModel(models.mSidePillar .. "_tl.mdl", coor.rotZ(pi * 0.5), mPlace(fitModel2D(5, 0.5)(false, true), inner, outer, t.sup, t.sup + diff)),
+                station.newModel(models.mSidePillar .. "_br.mdl", coor.rotZ(pi * 0.5), mPlace(fitModel2D(5, 0.5)(true, false), inner, outer, t.sup, t.sup + diff))
             }
         end)
         
@@ -176,7 +178,7 @@ local function params(paramFilter)
             },
             {
                 key = "layout",
-                name = sp.._("Layout"),
+                name = sp .. _("Layout"),
                 values = {_("Rail") .. "/" .. _("Road"), _("Road") .. "/" .. _("Rail"), _("Road") .. "/" .. _("Road")},
                 defaultIndex = 0
             },
@@ -301,7 +303,7 @@ local function params(paramFilter)
             },
             {
                 key = "bridgeForm",
-                name = sp.."\n" .. _("Structure Form"),
+                name = sp .. "\n" .. _("Structure Form"),
                 values = {_("Simple"), _("Flying junction")},
                 defaultIndex = 1,
             },
@@ -353,17 +355,17 @@ local function defaultParams(param, fParams)
     
     param.trackType = param.trackType or 0
     param.catenary = param.catenary or 0
-
+    
     func.forEach(
         func.filter(params({}), function(p) return p.key ~= "tramTrack" end),
         function(i)param[i.key] = limiter(i.defaultIndex or 0, #i.values)(param[i.key]) end)
-        
+    
     fParams(param)
 end
 
 local updateFn = function(fParams, models, streetConfig)
     return function(params)
-        
+            
             defaultParams(params, fParams)
             
             local deg = listDegree[params.xDegDec + 1] + params.xDegUni
@@ -390,19 +392,18 @@ local updateFn = function(fParams, models, streetConfig)
             local isLowerRoad = func.contains({0, 2}, params.layout)
             
             local nbTracks = nbTracksList[params.nbTracks + 1]
-
+            
             local nbPerGroup = ({1, 2, nbTracks})[params.nbPerGroup + 1]
-
+            
             local TLowerTracks = isLowerRoad and streetBuilder.nonAligned() or trackBuilder.nonAligned()
             local TUpperTracks = isUpperRoad and streetBuilder.nonAligned() or trackBuilder.nonAligned()
             local TUpperExtTracks = isUpperRoad and streetBuilder.bridge(models.bridgeType) or trackBuilder.bridge(models.bridgeType)
             local retriveR = function(param) return rList[param + 1] * 1000 end
             
-
+            
             local fitModel = junction.fitModel(params.isMir == 1)
             local fitModel2D = junction.fitModel2D(params.isMir == 1)
-            local slopeWalls = jM.slopeWalls(fitModel, fitModel2D)
-
+            
             local info = {
                 A = {
                     lower = {
@@ -451,8 +452,8 @@ local updateFn = function(fParams, models, streetConfig)
             }
             
             local offsets = {
-                lower = junction.buildCoors(info.A.lower.nbTracks, isLowerRoad and 1 or nbPerGroup, isLowerRoad and { trackWidth = streetWidth, wallWidth = 0.5 } or nil),
-                upper = junction.buildCoors(info.A.upper.nbTracks, info.A.upper.nbTracks, isUpperRoad and { trackWidth = streetWidth, wallWidth = 0.5 } or nil)
+                lower = junction.buildCoors(info.A.lower.nbTracks, isLowerRoad and 1 or nbPerGroup, isLowerRoad and {trackWidth = streetWidth, wallWidth = 0.5} or nil),
+                upper = junction.buildCoors(info.A.upper.nbTracks, info.A.upper.nbTracks, isUpperRoad and {trackWidth = streetWidth, wallWidth = 0.5} or nil)
             }
             
             local group = {
@@ -464,12 +465,14 @@ local updateFn = function(fParams, models, streetConfig)
                 lower = isLowerRoad
                 and {
                     tracks = streetGroup.offset[params.isRoadSp + 1][params.streetType + 1],
-                    walls = params.isRoadSp == 0 and {-0.25 - streetWidth * 0.5, 0.25 + streetWidth * 0.5} or {-0.25 - streetWidth * 0.5, 0, 0.25 + streetWidth * 0.5}
+                    walls = params.isRoadSp == 0 and {-0.25 - streetWidth * 0.5, 0.25 + streetWidth * 0.5} or {-0.25 - streetWidth * 0.5, 0, 0.25 + streetWidth * 0.5},
+                    pavings = {-streetWidth * 0.5, streetWidth * 0.5}
                 } or offsets.lower,
                 upper = isUpperRoad
                 and {
                     tracks = streetGroup.offset[1][params.streetType + 1],
-                    walls = {-0.25 - streetWidth * 0.5, 0.25 + streetWidth * 0.5}
+                    walls = {-0.25 - streetWidth * 0.5, 0.25 + streetWidth * 0.5},
+                    pavings = {-streetWidth * 0.5, streetWidth * 0.5}
                 } or offsets.upper,
             }
             
@@ -548,22 +551,16 @@ local updateFn = function(fParams, models, streetConfig)
                 
                 local preparedExt = {
                     tracks = jM.retriveExt(extProtos("tracks")),
-                    walls = jM.retriveExt(extProtos("walls"))
+                    walls = jM.retriveExt(extProtos("walls")),
+                    pavings = jM.retriveExt(extProtos("pavings"))
                 }
                 
                 return {
                     edges = jM.retriveX(jA.retriveTracks, preparedExt.tracks),
-                    polys = {
-                        upper = {
-                            A = (isUpperRoad and jA.retrivePolys(4, streetWidth * 0.5 + 1) or jA.retrivePolys())(preparedExt.tracks.upper.A),
-                            B = (isUpperRoad and jA.retrivePolys(4, streetWidth * 0.5 + 1) or jA.retrivePolys())(preparedExt.tracks.upper.B)
-                        },
-                        lower = {
-                            A = (isLowerRoad and jA.retrivePolys(4, streetWidth * 0.5 + 1) or jA.retrivePolys())(preparedExt.tracks.lower.A),
-                            B = (isLowerRoad and jA.retrivePolys(4, streetWidth * 0.5 + 1) or jA.retrivePolys())(preparedExt.tracks.lower.B)
-                        }
-                    },
-                    surface = jM.retriveX(jA.retriveTrackSurfaces(fitModel, fitModel2D), preparedExt.tracks),
+                    polys = jM.retriveX(jA.retrivePolys(false, isUpperRoad and streetWidth * 0.5 + 1 or false), preparedExt.tracks),
+                    polysNarrow = jM.retriveX(jA.retrivePolys(false, isUpperRoad and streetWidth * 0.5 + 0.5 or false), preparedExt.tracks),
+                    polysNarrow2 = jM.retriveX(jA.retrivePolys(false, isUpperRoad and streetWidth * 0.5 + 0.75 or false), preparedExt.tracks),
+                    pavings = jM.retriveX(jA.retriveTrackPavings(fitModel, fitModel2D), preparedExt.pavings),
                     walls = jM.retriveX(jA.retriveWalls(fitModel, fitModel2D), preparedExt.walls)
                 }, preparedExt
             end)()
@@ -571,16 +568,6 @@ local updateFn = function(fParams, models, streetConfig)
             local trackEdges = {
                 lower = jM.generateTrackGroups(group.A.lower.tracks, group.B.lower.tracks, {mpt = mDepth, mvec = coor.I()}),
                 upper = jM.generateTrackGroups(group.A.upper.tracks, group.B.upper.tracks, {mpt = mTunnelZ * mDepth, mvec = coor.I()})
-            }
-            
-            local upperPolys = {
-                A = junction.generatePolyArc(group.A.upper.tracks, "inf", "mid")(0, isUpperRoad and streetWidth * 0.5 + 1 or 3.5),
-                B = junction.generatePolyArc(group.B.upper.tracks, "mid", "sup")(0, isUpperRoad and streetWidth * 0.5 + 1 or 3.5)
-            }
-            
-            local lowerPolys = {
-                A = junction.generatePolyArc(group.A.lower.tracks, "inf", "mid")(4, isLowerRoad and streetWidth * 0.5 + 1or 3.5),
-                B = junction.generatePolyArc(group.B.lower.tracks, "mid", "sup")(4, isLowerRoad and streetWidth * 0.5 + 1or 3.5)
             }
             
             local function selectEdge(level)
@@ -627,19 +614,19 @@ local updateFn = function(fParams, models, streetConfig)
                 / (solidEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TUpperTracks)
                 / (bridgeEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TUpperExtTracks)
                 / (lowerEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TLowerTracks)
-
+            
             local structureGen = params.bridgeForm == 0 and generateStructure(fitModel, fitModel2D) or jM.generateStructure(fitModel, fitModel2D)
-
+            
             local structure = {
                 A = structureGen(structureGroup.A.lower, structureGroup.A.upper, mTunnelZ * mDepth, models)[1],
                 B = structureGen(structureGroup.B.lower, structureGroup.B.upper, mTunnelZ * mDepth, models)[2]
             }
             
             local innerWalls = params.bridgeForm == 0 and "simpleWalls" or "walls"
-
-            local slopeWallModels = slopeWalls(
+            
+            
+            local terrainIntersection = jM.findIntersection(
                 info,
-                models,
                 tunnelHeight * heightFactor,
                 preparedExt.walls.lower.A,
                 isLowerRoad and {structureGroup.A.lower[innerWalls][1], structureGroup.A.lower[innerWalls][#structureGroup.A.lower[innerWalls]]} or group.A.lower[innerWalls],
@@ -648,99 +635,105 @@ local updateFn = function(fParams, models, streetConfig)
                 preparedExt.walls.upper.A[1],
                 preparedExt.walls.upper.B[#preparedExt.walls.upper.B]
             )
-
-            local uPolys = function(part)
-                local i = info[part].upper
-                local polySet = ext.polys.upper[part]
-                return (not i.used or i.isBridge)
-                    and {}
-                    or (
-                    i.isTerra
-                    and {
-                        equal = station.projectPolys(coor.I())(polySet.trackPolys)
+            local slopeWallModels = jM.slopeWalls(models, terrainIntersection, fitModel)
+            
+            local upperPolys = pipe.exec * function()
+                local fz = function(_) return {y = heightFactor * tunnelHeight} end
+                local tr = {
+                    junction.trackLevel(fz, fz),
+                    junction.trackLeft(fz),
+                    junction.trackRight(fz)
+                }
+                local A = {junction.generatePolyArc(group.A.upper.tracks, "inf", "mid")(0, isUpperRoad and streetWidth * 0.5 or 2.75, tr)}
+                local B = {junction.generatePolyArc(group.B.upper.tracks, "mid", "sup")(0, isUpperRoad and streetWidth * 0.5 or 2.75, tr)}
+                return {
+                    A = {
+                        polys = A[1],
+                        trackPolys = A[2],
+                        leftPolys = A[3],
+                        rightPolys = A[4]
+                    },
+                    B = {
+                        polys = B[1],
+                        trackPolys = B[2],
+                        leftPolys = B[3],
+                        rightPolys = B[4]
                     }
-                    or {
-                        greater = station.projectPolys(coor.I())(polySet.polys),
-                        less = station.projectPolys(coor.I())(polySet.trackPolys)
-                    }
-            )
+                }
             end
             
-            local slopeWallArcs = pipe.new
-                / func.map(info.A.upper.isTerra and preparedExt.tracks.lower.A or {},
-                function(w)
-                    return {
-                        lower = w.guidelines[2]:withLimits({inf = w.guidelines[1]:extendLimits(4).inf}),
-                        upper = preparedExt.walls.upper.A[1].guidelines[1],
-                        fz = preparedExt.walls.upper.A[1].fn.fz,
-                        from = "sup", to = "inf"
+            local lowerLessPolys = jM.lowerTerrainPolys(terrainIntersection)
+            local lowerSlotPolys = jM.lowerSlotPolys(terrainIntersection)
+            
+            local lowerPolys = pipe.exec * function()
+                local fz = function(_) return {y = (heightFactor - 1) * tunnelHeight} end
+                local tr = {junction.trackLevel(fz, fz)}
+                local A = {junction.generatePolyArc(group.A.lower.tracks, "inf", "mid")(0, isLowerRoad and streetWidth * 0.5 or 2.75, tr)}
+                local B = {junction.generatePolyArc(group.B.lower.tracks, "mid", "sup")(0, isLowerRoad and streetWidth * 0.5 or 2.75, tr)}
+                return {
+                    A = {
+                        polys = A[1],
+                        trackPolys = A[2]
+                    },
+                    B = {
+                        polys = B[1],
+                        trackPolys = B[2]
                     }
-                end)
-                / func.map(info.B.upper.isTerra and preparedExt.tracks.lower.B or {},
-                function(w)
-                    return {
-                        lower = w.guidelines[1]:withLimits({sup = w.guidelines[2]:extendLimits(4).sup}),
-                        upper = preparedExt.walls.upper.B[#preparedExt.walls.upper.B].guidelines[1],
-                        fz = preparedExt.walls.upper.B[#preparedExt.walls.upper.B].fn.fz,
-                        from = "inf", to = "sup"
-                    }
-                end)
-                * pipe.map(pipe.map(function(sw)
-                    local arcExt = isLowerRoad and {
-                        sw.lower + (streetWidth * 0.5),
-                        sw.lower + (streetWidth * 0.25),
-                        sw.lower + (-streetWidth * 0.5),
-                        sw.lower + (-streetWidth * 0.25),
-                    } or {
-                        sw.lower + 2.5,
-                        sw.lower + (-2.5),
-                    }
-
-                    local loc = func.min(
-                        func.map(arcExt, function(a) return jM.detectSlopeIntersection(a, sw.upper, sw.fz, a[sw.from], a[sw.to] - a[sw.from]) end),
-                        function(l, r) return abs(l - sw.lower[sw.to]) < abs(r - sw.lower[sw.to]) end)
-
-                    return sw.lower:withLimits({
-                        [sw.from] = loc,
-                        [sw.to] = sw[sw.to],
-                    })
-                end
-                ))
-                * pipe.map(pipe.map(function(ar) return junction.generatePolyArc({ar, ar}, "inf", "sup")(0, isLowerRoad and streetWidth * 0.5 or 2.5) end))
-                * function(ls) return {A = func.flatten(ls[1]), B = func.flatten(ls[2])} end
-                        
-            local lPolys = function(part)
-                local i = info[part].lower
-                local polySet = ext.polys.lower[part]
-                return (not i.used)
-                    and {}
-                    or {
-                        less = station.projectPolys(coor.I())(info[part].upper.isTerra and slopeWallArcs[part] or polySet.polys),
-                        slot = station.projectPolys(coor.I())(polySet.trackPolys),
-                        greater = station.projectPolys(coor.I())(polySet.trackPolys)
-                    }
+                }
             end
             
-            local uXPolys = {
-                equal = pipe.new
-                + ((info.A.upper.isTerra or heightFactor == 0) and station.projectPolys(mTunnelZ * mDepth)(upperPolys.A) or {})
-                + ((info.B.upper.isTerra or heightFactor == 0) and station.projectPolys(mTunnelZ * mDepth)(upperPolys.B) or {})
-                ,
-                less = pipe.new
-                + ((not info.A.upper.isTerra and heightFactor ~= 0) and station.projectPolys(mTunnelZ * mDepth)(upperPolys.A) or {})
-                + ((not info.B.upper.isTerra and heightFactor ~= 0) and station.projectPolys(mTunnelZ * mDepth)(upperPolys.B) or {})
-                ,
-                greater = pipe.new + (info.A.upper.isTerra and {} or station.projectPolys(mDepth)(upperPolys.A))
-                + (info.B.upper.isTerra and {} or station.projectPolys(mDepth)(upperPolys.B))
+            local lowerTerrain = function(part) return {
+                less = info[part].lower.isTerra and info[part].upper.isTerra and {
+                    lowerLessPolys[part]
+                } or {
+                    lowerPolys[part].polys,
+                    ext.polys.lower[part].polys,
+                },
+                greater = {
+                    lowerPolys[part].trackPolys,
+                    ext.polys.lower[part].trackPolys
+                }
             }
+            end
             
-            local lXPolys = {
-                less = station.projectPolys(coor.I())(info.A.upper.isTerra and {} or lowerPolys.A, info.B.upper.isTerra and {} or lowerPolys.B),
-                slot = station.projectPolys(mDepth * coor.transZ(-0.2))(lowerPolys.A, lowerPolys.B),
-                greater = station.projectPolys(mDepth)(lowerPolys.A, lowerPolys.B)
+            local upperTerrain = function(part) return {
+                less = (info[part].upper.isBridge or (not info[part].upper.isTerra and not info[part].lower.isTerra)) and {
+                    upperPolys[part].polys,
+                    ext.polys.upper[part].polys,
+                } or {
+                    upperPolys[part].trackPolys,
+                    ext.polys.upper[part].trackPolys
+                },
+                greater = info[part].upper.isTerra and {
+                    upperPolys[part].trackPolys,
+                    ext.polys.upper[part].trackPolys,
+                    upperPolys[part].leftPolys,
+                    ext.polys.upper[part].leftPolys,
+                    upperPolys[part].rightPolys,
+                    ext.polys.upper[part].rightPolys
+                } or {
+                    upperPolys[part].polys,
+                    ext.polys.upper[part].polys,
+                }
             }
+            end
             
-
+            local lXPavings = (group.A.lower.pavings + group.B.lower.pavings)
+                * pipe.map(
+                    junction.makeFn("flying_junction/paving_base", fitModel(1, 5), 1,
+                        function(fitModel, arcL, arcR, rad1, rad2)
+                            local size = {
+                                lt = arcL:pt(rad1):withZ((heightFactor - 1) * tunnelHeight),
+                                lb = arcL:pt(rad2):withZ((heightFactor - 1) * tunnelHeight),
+                                rt = arcR:pt(rad1):withZ((heightFactor - 1) * tunnelHeight),
+                                rb = arcR:pt(rad2):withZ((heightFactor - 1) * tunnelHeight)
+                            }
+                            return fitModel(size)
+                        end)
+                )
+                * pipe.flatten()
+                * pipe.flatten()
+            
             local function withIfNotBridge(level, part)
                 return function(c)
                     return (info[part][level].used and not info[part][level].isBridge) and c or {}
@@ -753,14 +746,17 @@ local updateFn = function(fParams, models, streetConfig)
                 end
             end
             
-
+            
             local result = {
                 edgeLists = edges,
                 models = pipe.new
                 + structure.A.fixed
                 + structure.B.fixed
-                + withIfSolid("upper", "A")(ext.surface.upper.A)
-                + withIfSolid("upper", "B")(ext.surface.upper.B)
+                + withIfSolid("upper", "A")(ext.pavings.upper.A)
+                + withIfSolid("upper", "B")(ext.pavings.upper.B)
+                + (info.A.lower.used and ext.pavings.lower.A or {})
+                + (info.B.lower.used and ext.pavings.lower.B or {})
+                + lXPavings
                 + (heightFactor > 0
                 and pipe.new
                 + structure.A.upper
@@ -778,26 +774,41 @@ local updateFn = function(fParams, models, streetConfig)
                 + withIfNotBridge("lower", "B")(ext.walls.lower.B[1])
                 + withIfNotBridge("lower", "B")(ext.walls.lower.B[#ext.walls.lower.B])
                 or {})
-                + slopeWallModels
+                + (info.A.lower.used and slopeWallModels.A or {})
+                + (info.B.lower.used and slopeWallModels.B or {})
                 ,
-                terrainAlignmentLists = station.mergePoly(uXPolys, uPolys("A"), uPolys("B"))() + station.mergePoly(lXPolys, lPolys("A"), lPolys("B"))()
-                ,
-                groundFaces = (pipe.new
-                + upperPolys.A
-                + upperPolys.B
-                + lowerPolys.A
-                + lowerPolys.B
-                + ((info.A.lower.used and not info.A.lower.isBridge) and ext.polys.lower.A.polys or {})
-                + ((info.B.lower.used and not info.B.lower.isBridge) and ext.polys.lower.B.polys or {})
-                + ((info.A.upper.used and not info.A.upper.isBridge) and ext.polys.upper.A.polys or {})
-                + ((info.B.upper.used and not info.B.upper.isBridge) and ext.polys.upper.B.polys or {})
+                terrainAlignmentLists =
+                station.mergePoly({less = station.projectPolys(coor.I())(
+                    unpack(
+                        pipe.new
+                        + (info.A.lower.used and lowerTerrain("A").less or {})
+                        + (info.B.lower.used and lowerTerrain("B").less or {})
+                        + (info.A.upper.used and upperTerrain("A").less or {})
+                        + (info.B.upper.used and upperTerrain("B").less or {})
                 )
-                * pipe.mapFlatten(function(p)
-                    return {
-                        {face = func.map(p, coor.vec2Tuple), modes = {{type = "FILL", key = "building_paving_fill"}}},
-                        {face = func.map(p, coor.vec2Tuple), modes = {{type = "STROKE_OUTER", key = "building_paving"}}}
-                    }
-                end)
+                )
+                })()
+                + station.mergePoly({greater = station.projectPolys(coor.I())(
+                    unpack(
+                        pipe.new
+                        + (info.A.lower.used and lowerTerrain("A").greater or {})
+                        + (info.B.lower.used and lowerTerrain("B").greater or {})
+                        + (info.A.upper.used and upperTerrain("A").greater or {})
+                        + (info.B.upper.used and upperTerrain("B").greater or {})
+                )
+                )
+                })()
+                ,
+                groundFaces =
+                (
+                pipe.new
+                + lowerPolys.A.polys + lowerPolys.B.polys
+                + (info.A.lower.used and info.A.lower.isTerra and info.A.upper.isTerra and lowerSlotPolys.A or {})
+                + (info.B.lower.used and info.B.lower.isTerra and info.B.upper.isTerra and lowerSlotPolys.B or {})
+                + (not info.A.lower.used and {} or info.A.lower.isTerra and ext.polysNarrow.lower.A.polys or ext.polysNarrow2.lower.A.polys)
+                + (not info.B.lower.used and {} or info.B.lower.isTerra and ext.polysNarrow.lower.B.polys or ext.polysNarrow2.lower.B.polys)
+                )
+                * pipe.map(function(p) return {face = (func.map(p, coor.vec2Tuple)), modes = {{type = "FILL", key = "hole"}}} end)
             }
             
             -- End of generation
