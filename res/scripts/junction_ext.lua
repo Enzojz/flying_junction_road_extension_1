@@ -413,7 +413,7 @@ local updateFn = function(fParams, models, streetConfig)
                         rad = 0,
                         used = func.contains({0, 1}, params.transitionA),
                         isBridge = false,
-                        isTerra = false,
+                        isTerra = heightFactor >= 1,
                         extR = (params.trSRadiusA == 0 and 1 or -1) * retriveR(params.trRadiusA)
                     },
                     upper = {
@@ -435,7 +435,7 @@ local updateFn = function(fParams, models, streetConfig)
                         rad = 0,
                         used = func.contains({0, 1}, params.transitionB),
                         isBridge = false,
-                        isTerra = false,
+                        isTerra = heightFactor >= 1,
                         extR = (params.trSRadiusB == 0 and 1 or -1) * retriveR(params.trRadiusB)
                     },
                     upper = {
@@ -464,13 +464,13 @@ local updateFn = function(fParams, models, streetConfig)
             local structureOffsets = {
                 lower = isLowerRoad
                 and {
-                    tracks = streetGroup.offset[params.isRoadSp + 1][params.streetType + 1],
+                    tracks = offsets.lower.tracks,
                     walls = params.isRoadSp == 0 and {-0.25 - streetWidth * 0.5, 0.25 + streetWidth * 0.5} or {-0.25 - streetWidth * 0.5, 0, 0.25 + streetWidth * 0.5},
                     pavings = {-streetWidth * 0.5, streetWidth * 0.5}
                 } or offsets.lower,
                 upper = isUpperRoad
                 and {
-                    tracks = streetGroup.offset[1][params.streetType + 1],
+                    tracks = offsets.upper.tracks,
                     walls = {-0.25 - streetWidth * 0.5, 0.25 + streetWidth * 0.5},
                     pavings = {-streetWidth * 0.5, streetWidth * 0.5}
                 } or offsets.upper,
@@ -555,19 +555,41 @@ local updateFn = function(fParams, models, streetConfig)
                     pavings = jM.retriveExt(extProtos("pavings"))
                 }
                 
+                local function retrivePolys(extLon, extLat, extLat2)
+                    return {
+                        upper = {
+                            A = jA.retrivePolys(extLon or isUpperRoad and streetWidth, isUpperRoad and streetWidth * 0.5 + extLat or extLat2)(preparedExt.tracks.upper.A),
+                            B = jA.retrivePolys(extLon or isUpperRoad and streetWidth, isUpperRoad and streetWidth * 0.5 + extLat or extLat2)(preparedExt.tracks.upper.B)
+                        },
+                        lower = {
+                            A = jA.retrivePolys(extLon or isLowerRoad and streetWidth, isLowerRoad and streetWidth * 0.5 + extLat or extLat2)(preparedExt.tracks.lower.A),
+                            B = jA.retrivePolys(extLon or isLowerRoad and streetWidth, isLowerRoad and streetWidth * 0.5 + extLat or extLat2)(preparedExt.tracks.lower.B)
+                        }
+                    }
+                end
+
                 return {
-                    edges = jM.retriveX(jA.retriveTracks, preparedExt.tracks),
-                    polys = jM.retriveX(jA.retrivePolys(false, isUpperRoad and streetWidth * 0.5 + 1 or false), preparedExt.tracks),
-                    polysNarrow = jM.retriveX(jA.retrivePolys(false, isUpperRoad and streetWidth * 0.5 + 0.5 or false), preparedExt.tracks),
-                    polysNarrow2 = jM.retriveX(jA.retrivePolys(false, isUpperRoad and streetWidth * 0.5 + 0.75 or false), preparedExt.tracks),
+                    edges = {
+                        upper = {
+                            A = jA.retriveTracks(preparedExt.tracks.upper.A, isUpperRoad and streetWidth),
+                            B = jA.retriveTracks(preparedExt.tracks.upper.B, isUpperRoad and streetWidth)
+                        },
+                        lower = {
+                            A = jA.retriveTracks(preparedExt.tracks.lower.A, isLowerRoad and streetWidth),
+                            B = jA.retriveTracks(preparedExt.tracks.lower.B, isLowerRoad and streetWidth)
+                        }
+                    },
+                    polys = retrivePolys(false, 1, false),
+                    polysNarrow = retrivePolys(0, 0, 2.5),
+                    polysNarrow2 = retrivePolys(0, 0.25, 2.75),
                     pavings = jM.retriveX(jA.retriveTrackPavings(fitModel, fitModel2D), preparedExt.pavings),
                     walls = jM.retriveX(jA.retriveWalls(fitModel, fitModel2D), preparedExt.walls)
                 }, preparedExt
             end)()
             
             local trackEdges = {
-                lower = jM.generateTrackGroups(group.A.lower.tracks, group.B.lower.tracks, {mpt = mDepth, mvec = coor.I()}),
-                upper = jM.generateTrackGroups(group.A.upper.tracks, group.B.upper.tracks, {mpt = mTunnelZ * mDepth, mvec = coor.I()})
+                lower = jM.generateTrackGroups(group.A.lower.tracks, group.B.lower.tracks, {mpt = mDepth, mvec = coor.I()}, isLowerRoad and streetWidth * 1.5),
+                upper = jM.generateTrackGroups(group.A.upper.tracks, group.B.upper.tracks, {mpt = mTunnelZ * mDepth, mvec = coor.I()}, isUpperRoad and streetWidth * 1.5)
             }
             
             local function selectEdge(level)
@@ -662,14 +684,14 @@ local updateFn = function(fParams, models, streetConfig)
                 }
             end
             
-            local lowerLessPolys = jM.lowerTerrainPolys(terrainIntersection)
+            local lowerLessPolys = jM.lowerTerrainPolys(terrainIntersection, isLowerRoad and streetWidth)
             local lowerSlotPolys = jM.lowerSlotPolys(terrainIntersection)
             
             local lowerPolys = pipe.exec * function()
                 local fz = function(_) return {y = (heightFactor - 1) * tunnelHeight} end
                 local tr = {junction.trackLevel(fz, fz)}
-                local A = {junction.generatePolyArc(group.A.lower.tracks, "inf", "mid")(0, isLowerRoad and streetWidth * 0.5 or 2.75, tr)}
-                local B = {junction.generatePolyArc(group.B.lower.tracks, "mid", "sup")(0, isLowerRoad and streetWidth * 0.5 or 2.75, tr)}
+                local A = {junction.generatePolyArc(group.A.lower.tracks, "inf", "mid")(0, isLowerRoad and streetWidth * 0.5 + 0.25 or 2.75, tr)}
+                local B = {junction.generatePolyArc(group.B.lower.tracks, "mid", "sup")(0, isLowerRoad and streetWidth * 0.5 + 0.25 or 2.75, tr)}
                 return {
                     A = {
                         polys = A[1],
@@ -687,7 +709,7 @@ local updateFn = function(fParams, models, streetConfig)
                     lowerLessPolys[part]
                 } or {
                     lowerPolys[part].polys,
-                    ext.polys.lower[part].polys,
+                    ext.polys.lower[part].polys
                 },
                 greater = {
                     lowerPolys[part].trackPolys,
@@ -752,11 +774,11 @@ local updateFn = function(fParams, models, streetConfig)
                 models = pipe.new
                 + structure.A.fixed
                 + structure.B.fixed
-                + withIfSolid("upper", "A")(ext.pavings.upper.A)
-                + withIfSolid("upper", "B")(ext.pavings.upper.B)
-                + (info.A.lower.used and ext.pavings.lower.A or {})
-                + (info.B.lower.used and ext.pavings.lower.B or {})
-                + lXPavings
+                -- + withIfSolid("upper", "A")(ext.pavings.upper.A)
+                -- + withIfSolid("upper", "B")(ext.pavings.upper.B)
+                -- + (info.A.lower.used and ext.pavings.lower.A or {})
+                -- + (info.B.lower.used and ext.pavings.lower.B or {})
+                -- + lXPavings
                 + (heightFactor > 0
                 and pipe.new
                 + structure.A.upper
