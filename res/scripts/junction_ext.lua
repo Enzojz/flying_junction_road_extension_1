@@ -208,7 +208,7 @@ local function params(paramFilter)
             {
                 key = "streetEra",
                 name = _("Road Era"),
-                values = {"Ancient", "Modern"},
+                values = {"Ancien", "Modern"},
                 defaultIndex = 1
             },
             paramsutil.makeTramTrackParam1(),

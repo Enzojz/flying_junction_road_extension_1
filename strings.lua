@@ -16,6 +16,12 @@ ATTENTION:
 The flying junction mod is needed to use it.
 
 Changelog
+1.17
+* Terrain alignment reimplemented to get rid to zig-zags
+* Added 90° options in crossing angle (It's actually 89.95°)
+* Improved coliision detection on modification
+* Option to choose road era
+* Version alignment
 1.6
 * Model errors when mirrored is set on are fixed
 1.5
@@ -48,6 +54,12 @@ ATTENTION:
 Le mod "Saut de mouton" est exigé pour son utilisation.
 
 Changelog:
+1.17
+* Réimplémentation de alignment terrain pour éffacer les zigzags
+* Ajoute d'option 90° pour l'angle de croisement (C'est actuellement 89.95°)
+* Détection de colission améliorée
+* Option pour choisir l'époque de route
+* Alignment de version
 1.6
 * Correction des erreurs des maquettes lors l'infrastructure est en miroir
 1.5
@@ -79,6 +91,12 @@ local descCN = [[本MOD提供建设各种形式立体道口和公路立交的可
 
 
 Changelog:
+1.17
+* 重写了地面重整的算法，消除了锯齿
+* 增加了90度交会角的选项
+* 改进了碰撞检测
+* 增加了道路年代的选项
+* 版本对齐
 1.6
 * 修正了镜像下的模型错误
 1.5
@@ -140,6 +158,9 @@ function data()
             ["Upper level length"] = "Longueur du niveau haut",
             ["Radius of lower level"] = "Rayon du niveau bas",
             ["Radius of upper level"] = "Rayon du niveau haut",
+            ["Road Era"] = "Epoque de route",
+            ["Ancien"] = "Ancienne",
+            ["Modern"] = "Moderne",
             
             ["Rail/Road Exchange Crossing"] = "Pont rail/route de changement de position",
             ["Rail/Road Crossing"] = "Pont rail/route",
@@ -192,6 +213,9 @@ function data()
             ["Upper level length"] = "上层轨道长度",
             ["Radius of lower level"] = "下层半径",
             ["Radius of upper level"] = "上层半径",
+            ["Road Era"] = "道路年代",
+            ["Ancien"] = "古代",
+            ["Modern"] = "现代",
             
             ["Rail/Road Exchange Crossing"] = "换位立交道口",
             ["Rail/Road Crossing"] = "立交道口",
