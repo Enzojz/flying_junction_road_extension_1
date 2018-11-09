@@ -15,7 +15,7 @@ local floor = math.floor
 local ceil = math.ceil
 local unpack = table.unpack
 
-local listDegree = {5, 10, 20, 30, 40, 50, 60, 70, 80}
+local listDegree = {5, 10, 20, 30, 40, 50, 60, 70, 80, 90}
 local rList = {junction.infi * 0.001, 5, 3.5, 2, 1, 4 / 5, 2 / 3, 3 / 5, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 6, 1 / 8, 1 / 10, 1 / 20}
 
 local trSlopeList = {15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 100}
@@ -25,6 +25,49 @@ local tunnelHeightList = {11, 10, 9.5, 8.7}
 local lengthPercentList = {1, 4 / 5, 3 / 4, 3 / 5, 1 / 2, 2 / 5, 1 / 4, 1 / 5, 1 / 10, 1 / 20}
 
 local nbTracksList = {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14}
+
+local streetList = {
+    {
+        country = {
+            type = {
+                "country_old_small.lua",
+                "country_old_medium.lua",
+                "country_old_large_upgrade.lua",
+                "country_old_large.lua"
+            },
+            width = {12, 18, 18, 24}
+        },
+        street = {
+            type = {
+                "old_small.lua",
+                "old_medium.lua",
+                "old_large_upgrade.lua",
+                "old_large.lua"
+            },
+            width = {12, 18, 18, 24}
+        },
+    },
+    {
+        country = {
+            type = {
+                "country_new_small.lua",
+                "country_new_medium.lua",
+                "country_new_large.lua",
+                "country_new_x_large.lua"
+            },
+            width = {10, 16, 22.5, 30.5}
+        },
+        street = {
+            type = {
+                "new_small.lua",
+                "new_medium.lua",
+                "new_large.lua",
+                "new_x_large.lua"
+            },
+            width = {12, 18, 24, 32}
+        },
+    }
+}
 
 local trackList = {"standard.lua", "high_speed.lua"}
 local trackWidthList = {5, 5}
@@ -162,6 +205,12 @@ local function params(paramFilter)
                 values = {"S", "M", "L", "XL"},
                 defaultIndex = 2
             },
+            {
+                key = "streetEra",
+                name = _("Road Era"),
+                values = {"Ancient", "Modern"},
+                defaultIndex = 1
+            },
             paramsutil.makeTramTrackParam1(),
             paramsutil.makeTramTrackParam2(),
             {
@@ -185,7 +234,7 @@ local function params(paramFilter)
             {
                 key = "xDegDec",
                 name = _("Crossing angles"),
-                values = {_("5"), _("10"), _("20"), _("30"), _("40"), _("50"), _("60"), _("70"), _("80"), },
+                values = {_("5"), _("10"), _("20"), _("30"), _("40"), _("50"), _("60"), _("70"), _("80"), ("90"), },
                 defaultIndex = 6
             },
             {
@@ -363,17 +412,17 @@ local function defaultParams(param, fParams)
     fParams(param)
 end
 
-local updateFn = function(fParams, models, streetConfig)
+local updateFn = function(fParams, models)
     return function(params)
             
             defaultParams(params, fParams)
             
             local deg = listDegree[params.xDegDec + 1] + params.xDegUni
-            local rad = math.rad(deg)
+            local rad = math.rad(deg > 89 and 89.95 or deg)
             
             local trackType = trackList[params.trackType + 1]
             local catenary = params.catenary == 1 -- and catenary
-            local streetGroup = streetConfig[params.streetUsage == 0 and "street" or "country"]
+            local streetGroup = streetList[params.streetEra + 1][params.streetUsage == 0 and "street" or "country"]
             local streetType = streetGroup.type[params.streetType + 1]
             local streetWidth = streetGroup.width[params.streetType + 1]
             local tramType = ({"NO", "YES", "ELECTRIC"})[params.tramTrack + 1]
@@ -567,7 +616,7 @@ local updateFn = function(fParams, models, streetConfig)
                         }
                     }
                 end
-
+                
                 return {
                     edges = {
                         upper = {

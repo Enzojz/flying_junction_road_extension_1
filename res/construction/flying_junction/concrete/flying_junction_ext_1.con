@@ -26,26 +26,6 @@ function data()
             mRoofFenceS = "flying_junction/concrete/roof_fence_side",
             mRoof = "flying_junction/concrete/roof",
             bridgeType = "z_concrete_flying_junction.lua",
-        },
-        {
-            country = {
-                type = {
-                    "country_new_small.lua",
-                    "country_new_medium.lua",
-                    "country_new_large.lua",
-                    "country_new_x_large.lua"
-                },
-                width = {10, 16, 22.5, 30.5}
-            },
-            street = {
-                type = {
-                    "new_small.lua",
-                    "new_medium.lua",
-                    "new_large.lua",
-                    "new_x_large.lua"
-                },
-                width = {12, 18, 24, 32}
-            },
         })
     }
 end

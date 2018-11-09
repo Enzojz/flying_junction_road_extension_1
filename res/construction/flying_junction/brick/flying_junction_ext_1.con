@@ -26,26 +26,7 @@ function data()
             mRoofFenceS = "flying_junction/brick/roof_fence_side",
             mRoof = "flying_junction/brick/roof",
             bridgeType = "z_brick_flying_junction.lua",
-        },
-        {
-            country = {
-                type = {
-                    "country_old_small.lua",
-                    "country_old_medium.lua",
-                    "country_old_large_upgrade.lua",
-                    "country_old_large.lua"
-                },
-                width = {12, 18, 18, 24}
-            },
-            street = {
-                type = {
-                    "old_small.lua",
-                    "old_medium.lua",
-                    "old_large_upgrade.lua",
-                    "old_large.lua"
-                },
-                width = {12, 18, 18, 24}
-            },
-        })
+        }
+    )
     }
 end
