@@ -448,8 +448,7 @@ local updateFn = function(fParams, models)
             local TUpperTracks = isUpperRoad and streetBuilder.nonAligned() or trackBuilder.nonAligned()
             local TUpperExtTracks = isUpperRoad and streetBuilder.bridge(models.bridgeType) or trackBuilder.bridge(models.bridgeType)
             local retriveR = function(param) return rList[param + 1] * 1000 end
-            
-            
+                        
             local fitModel = junction.fitModel(params.isMir == 1)
             local fitModel2D = junction.fitModel2D(params.isMir == 1)
             
@@ -515,13 +514,11 @@ local updateFn = function(fParams, models)
                 and {
                     tracks = offsets.lower.tracks,
                     walls = params.isRoadSp == 0 and {-0.25 - streetWidth * 0.5, 0.25 + streetWidth * 0.5} or {-0.25 - streetWidth * 0.5, 0, 0.25 + streetWidth * 0.5},
-                    pavings = {-streetWidth * 0.5, streetWidth * 0.5}
                 } or offsets.lower,
                 upper = isUpperRoad
                 and {
                     tracks = offsets.upper.tracks,
                     walls = {-0.25 - streetWidth * 0.5, 0.25 + streetWidth * 0.5},
-                    pavings = {-streetWidth * 0.5, streetWidth * 0.5}
                 } or offsets.upper,
             }
             
@@ -631,7 +628,7 @@ local updateFn = function(fParams, models)
                     polys = retrivePolys(false, 1, false),
                     polysNarrow = retrivePolys(0, 0, 2.5),
                     polysNarrow2 = retrivePolys(0, 0.25, 2.75),
-                    pavings = jM.retriveX(jA.retriveTrackPavings(fitModel, fitModel2D), preparedExt.pavings),
+                    pavings = jM.retriveX(jA.retriveTrackPavings(fitModel, models), preparedExt.pavings),
                     walls = jM.retriveX(jA.retriveWalls(fitModel, fitModel2D), preparedExt.walls)
                 }, preparedExt
             end)()
@@ -790,17 +787,35 @@ local updateFn = function(fParams, models)
             end
             
             local lXPavings = (group.A.lower.pavings + group.B.lower.pavings)
+                * pipe.interlace({"l", "r"})
                 * pipe.map(
-                    junction.makeFn("flying_junction/paving_base", fitModel(1, 5), 1,
-                        function(fitModel, arcL, arcR, rad1, rad2)
-                            local size = {
-                                lt = arcL:pt(rad1):withZ((heightFactor - 1) * tunnelHeight),
-                                lb = arcL:pt(rad2):withZ((heightFactor - 1) * tunnelHeight),
-                                rt = arcR:pt(rad1):withZ((heightFactor - 1) * tunnelHeight),
-                                rb = arcR:pt(rad2):withZ((heightFactor - 1) * tunnelHeight)
-                            }
-                            return fitModel(size)
-                        end)
+                    function(p)
+                        local coordsL = junction.generatePolyArcEdge(p.l, "inf", "sup")
+                        local coordsR = junction.generatePolyArcEdgeN(p.r, "inf", "sup", #coordsL - 1)
+                        
+                        return func.map2(
+                            func.interlace(coordsL, {"i", "s"}),
+                            func.interlace(coordsR, {"i", "s"}),
+                            function(l, r)
+                                local size = {
+                                    lt = l.i:withZ((heightFactor - 1) * tunnelHeight),
+                                    rt = r.i:withZ((heightFactor - 1) * tunnelHeight),
+                                    lb = l.s:withZ((heightFactor - 1) * tunnelHeight),
+                                    rb = r.s:withZ((heightFactor - 1) * tunnelHeight)
+                                }
+                                
+                                return
+                                    junction.subDivide(size, 5, 5, false, 1)
+                                    * pipe.map(function(size)
+                                        return {
+                                            station.newModel(models.mRoof .. "_tl.mdl", fitModel(5, 5)(true, true)(size)),
+                                            station.newModel(models.mRoof .. "_br.mdl", fitModel(5, 5)(false, false)(size))
+                                        }
+                                    end)
+                                    * pipe.flatten()
+                            end
+                    )
+                    end
                 )
                 * pipe.flatten()
                 * pipe.flatten()
@@ -823,11 +838,11 @@ local updateFn = function(fParams, models)
                 models = pipe.new
                 + structure.A.fixed
                 + structure.B.fixed
-                -- + withIfSolid("upper", "A")(ext.pavings.upper.A)
-                -- + withIfSolid("upper", "B")(ext.pavings.upper.B)
-                -- + (info.A.lower.used and ext.pavings.lower.A or {})
-                -- + (info.B.lower.used and ext.pavings.lower.B or {})
-                -- + lXPavings
+                + withIfSolid("upper", "A")(ext.pavings.upper.A)
+                + withIfSolid("upper", "B")(ext.pavings.upper.B)
+                + (info.A.lower.used and ext.pavings.lower.A or {})
+                + (info.B.lower.used and ext.pavings.lower.B or {})
+                + lXPavings
                 + (heightFactor > 0
                 and pipe.new
                 + structure.A.upper
