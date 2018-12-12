@@ -15,6 +15,8 @@ local floor = math.floor
 local ceil = math.ceil
 local unpack = table.unpack
 
+local _ = _ or function(s) return s end
+
 local listDegree = {5, 10, 20, 30, 40, 50, 60, 70, 80, 90}
 local rList = {junction.infi * 0.001, 5, 3.5, 2, 1, 4 / 5, 2 / 3, 3 / 5, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 6, 1 / 8, 1 / 10, 1 / 20}
 
@@ -832,7 +834,7 @@ local updateFn = function(fParams, models)
                 end
             end
             
-            
+            local dump = require "luadump"
             local result = {
                 edgeLists = edges,
                 models = pipe.new
@@ -864,7 +866,7 @@ local updateFn = function(fParams, models)
                 + (info.B.lower.used and slopeWallModels.B or {})
                 ,
                 terrainAlignmentLists =
-                station.mergePoly({less = station.projectPolys(coor.I())(
+                (station.mergePoly({less = station.projectPolys(coor.I())(
                     unpack(
                         pipe.new
                         + (info.A.lower.used and lowerTerrain("A").less or {})
@@ -884,6 +886,10 @@ local updateFn = function(fParams, models)
                 )
                 )
                 })()
+                ) * 
+                (function(f) 
+                    local _ = f * pipe.map(pipe.select("faces")) * pipe.forEach(function(f) local _ = f * pipe.map(function(f) return #f end) * dump() end) 
+                    return f end)
                 ,
                 groundFaces =
                 (
@@ -894,7 +900,9 @@ local updateFn = function(fParams, models)
                 + (not info.A.lower.used and {} or info.A.lower.isTerra and ext.polysNarrow.lower.A.polys or ext.polysNarrow2.lower.A.polys)
                 + (not info.B.lower.used and {} or info.B.lower.isTerra and ext.polysNarrow.lower.B.polys or ext.polysNarrow2.lower.B.polys)
                 )
-                * pipe.map(function(p) return {face = (func.map(p, coor.vec2Tuple)), modes = {{type = "FILL", key = "hole"}}} end)
+                * pipe.map(station.finalizePoly)
+                * pipe.filter(pipe.noop())
+                * pipe.map(function(p) return {face = p, modes = {{type = "FILL", key = "hole"}}} end)
             }
             
             if (#result.terrainAlignmentLists == 0) then

@@ -3,17 +3,18 @@ local func = require "flyingjunction/func"
 
 function data()
     return {
-        type = "STREET_STATION",
+        type = "ASSET_DEFAULT",
         description = {
             name = _("Rail/Road Exchange Crossing"),
             description = _("A flyover rail/road crossing for exchang positions, built in bricks")
         },
+        categories = { "junctions" },
         skipCollision = true,
         autoRemovable = false,
         availability = {
             yearFrom = 1870
         },
-        order = 27220,
+        order = 9900022,
         params = jMain.params({"curvedLevel", "rLower", "rUpper", "sLower", "sUpper"}),
         
         updateFn = jMain.updateFn(function(params)
