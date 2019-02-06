@@ -450,7 +450,7 @@ local updateFn = function(fParams, models)
             local TUpperTracks = isUpperRoad and streetBuilder.nonAligned() or trackBuilder.nonAligned()
             local TUpperExtTracks = isUpperRoad and streetBuilder.bridge(models.bridgeType) or trackBuilder.bridge(models.bridgeType)
             local retriveR = function(param) return rList[param + 1] * 1000 end
-                        
+            
             local fitModel = junction.fitModel(params.isMir == 1)
             local fitModel2D = junction.fitModel2D(params.isMir == 1)
             
@@ -834,7 +834,6 @@ local updateFn = function(fParams, models)
                 end
             end
             
-            local dump = require "luadump"
             local result = {
                 edgeLists = edges,
                 models = pipe.new
@@ -866,7 +865,7 @@ local updateFn = function(fParams, models)
                 + (info.B.lower.used and slopeWallModels.B or {})
                 ,
                 terrainAlignmentLists =
-                (station.mergePoly({less = station.projectPolys(coor.I())(
+                station.mergePoly({less = station.projectPolys(coor.I())(
                     unpack(
                         pipe.new
                         + (info.A.lower.used and lowerTerrain("A").less or {})
@@ -885,12 +884,7 @@ local updateFn = function(fParams, models)
                         + (info.B.upper.used and upperTerrain("B").greater or {})
                 )
                 )
-                })()
-                ) * 
-                (function(f) 
-                    local _ = f * pipe.map(pipe.select("faces")) * pipe.forEach(function(f) local _ = f * pipe.map(function(f) return #f end) * dump() end) 
-                    return f end)
-                ,
+                })(),
                 groundFaces =
                 (
                 pipe.new
