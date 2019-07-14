@@ -393,6 +393,12 @@ local function params(paramFilter)
                 name = _("Altitude Adjustment"),
                 values = func.map(heightList, function(h) return tostring(ceil(h * 100)) .. "%" end),
                 defaultIndex = 6
+            },
+            {
+                key = "freeNodes",
+                name = _("Free tracks/streets"),
+                values = {_("No"), _("Yes")},
+                defaultIndex = 0
             }
         })
         * pipe.filter(function(p) return not func.contains(paramFilter, p.key) end)
@@ -835,7 +841,7 @@ local updateFn = function(fParams, models)
             end
             
             local result = {
-                edgeLists = edges,
+                edgeLists = func.map(edges, function(e) return func.with(e, { freeNodes = (params.freeNodes == 1) and e.freeNodes or {} }) end),
                 models = pipe.new
                 + structure.A.fixed
                 + structure.B.fixed

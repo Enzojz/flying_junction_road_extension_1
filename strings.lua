@@ -16,6 +16,8 @@ ATTENTION:
 The flying junction mod is needed to use it.
 
 Changelog
+1.19
+* Added option to switch off/on free tracks and streets
 1.18
 * All tracks are modifiable free edges after construction (with support from the Final Patch)
 * Change of menu entry from Rail Depot to Asset/junctions
@@ -57,6 +59,8 @@ ATTENTION:
 Le mod "Saut de mouton" est exigé pour son utilisation.
 
 Changelog:
+1.19
+* Ajoute d'option de préférence aux voies à la modification libre.
 1.18
 * Tous les voies soitent modifiable après la construction (avec support de patche finale)
 * Changement d'entrée de construction du dêpot ferroviaire à asset/junctions
@@ -97,6 +101,8 @@ local descCN = [[本MOD提供建设各种形式立体道口和公路立交的可
 
 
 Changelog:
+1.19
+* 增加了可以控制是否修改轨道的选项
 1.18
 * 所有的轨道在建设完成后都可以自由修改（需要Final Patch的支持）
 * 菜单入口移至 资产/junctions 下
@@ -170,6 +176,7 @@ function data()
             ["Road Era"] = "Epoque de route",
             ["Ancien"] = "Ancienne",
             ["Modern"] = "Moderne",
+            ["Free tracks/streets"] = "Voie à la modification libre",
             
             ["Rail/Road Exchange Crossing"] = "Pont rail/route de changement de position",
             ["Rail/Road Crossing"] = "Pont rail/route",
@@ -225,6 +232,7 @@ function data()
             ["Road Era"] = "道路年代",
             ["Ancien"] = "古代",
             ["Modern"] = "现代",
+            ["Free tracks/streets"] = "可自由修改的轨道/街道",
             
             ["Rail/Road Exchange Crossing"] = "换位立交道口",
             ["Rail/Road Crossing"] = "立交道口",
