@@ -177,6 +177,7 @@ function data()
             ["Ancien"] = "Ancienne",
             ["Modern"] = "Moderne",
             ["Free tracks/streets"] = "Voie à la modification libre",
+            ["Not build"] = "Ne pas construire",
             
             ["Rail/Road Exchange Crossing"] = "Pont rail/route de changement de position",
             ["Rail/Road Crossing"] = "Pont rail/route",
@@ -233,6 +234,7 @@ function data()
             ["Ancien"] = "古代",
             ["Modern"] = "现代",
             ["Free tracks/streets"] = "可自由修改的轨道/街道",
+            ["Not build"] = "不建造",
             
             ["Rail/Road Exchange Crossing"] = "换位立交道口",
             ["Rail/Road Crossing"] = "立交道口",

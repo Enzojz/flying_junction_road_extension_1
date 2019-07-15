@@ -397,7 +397,7 @@ local function params(paramFilter)
             {
                 key = "freeNodes",
                 name = _("Free tracks/streets"),
-                values = {_("No"), _("Yes")},
+                values = {_("No"), _("Yes"), _("Not build")},
                 defaultIndex = 0
             }
         })
@@ -687,9 +687,9 @@ local updateFn = function(fParams, models)
                 * pipe.map(pipe.select("e"))
             
             local edges = pipe.new
-                / (solidEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TUpperTracks)
-                / (bridgeEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TUpperExtTracks)
-                / (lowerEdges * pipe.map(station.mergeEdges) * station.prepareEdges * TLowerTracks)
+                / (solidEdges * pipe.map(station.mergeEdges) * (station.prepareEdges(({false, true, nil})[params.freeNodes + 1])) * TUpperTracks)
+                / (bridgeEdges * pipe.map(station.mergeEdges) * (station.prepareEdges(({false, true, nil})[params.freeNodes + 1])) * TUpperExtTracks)
+                / (lowerEdges * pipe.map(station.mergeEdges) * (station.prepareEdges(({false, true, nil})[params.freeNodes + 1])) * TLowerTracks)
             
             local structureGen = params.bridgeForm == 0 and generateStructure(fitModel, fitModel2D) or jM.generateStructure(fitModel, fitModel2D)
             
@@ -841,7 +841,7 @@ local updateFn = function(fParams, models)
             end
             
             local result = {
-                edgeLists = func.map(edges, function(e) return func.with(e, { freeNodes = (params.freeNodes == 1) and e.freeNodes or {} }) end),
+                edgeLists = edges,
                 models = pipe.new
                 + structure.A.fixed
                 + structure.B.fixed
