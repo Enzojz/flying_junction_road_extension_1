@@ -591,12 +591,12 @@ local updateFn = function(fParams, models)
                         },
                         frac = {
                             lower = {
-                                A = heightFactor >= 1 and 1 or lengthPercentList[params.trLengthLowerA + 1],
-                                B = heightFactor >= 1 and 1 or lengthPercentList[params.trLengthLowerB + 1]
+                                A = lengthPercentList[params.trLengthLowerA + 1],
+                                B = lengthPercentList[params.trLengthLowerB + 1]
                             },
                             upper = {
-                                A = heightFactor == 0 and 1 or lengthPercentList[params.trLengthUpperA + 1],
-                                B = heightFactor == 0 and 1 or lengthPercentList[params.trLengthUpperB + 1]
+                                A = lengthPercentList[params.trLengthUpperA + 1],
+                                B = lengthPercentList[params.trLengthUpperB + 1]
                             }
                         }
                     }
@@ -689,7 +689,7 @@ local updateFn = function(fParams, models)
             local edges = pipe.new
                 / (solidEdges * pipe.map(station.mergeEdges) * (station.prepareEdges(({false, true, nil})[params.freeNodes + 1])) * TUpperTracks)
                 / (bridgeEdges * pipe.map(station.mergeEdges) * (station.prepareEdges(({false, true, nil})[params.freeNodes + 1])) * TUpperExtTracks)
-                / (lowerEdges * pipe.map(station.mergeEdges) * (station.prepareEdges(({false, true, nil})[params.freeNodes + 1])) * TLowerTracks)
+                / (lowerEdges * pipe.map(station.mergeEdges) * (station.prepareEdges(({false, true, nil})[isLowerRoad and 1 or (params.freeNodes + 1)])) * TLowerTracks)
             
             local structureGen = params.bridgeForm == 0 and generateStructure(fitModel, fitModel2D) or jM.generateStructure(fitModel, fitModel2D)
             
