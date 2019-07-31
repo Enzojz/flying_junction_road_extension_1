@@ -399,6 +399,12 @@ local function params(paramFilter)
                 name = _("Free tracks/streets"),
                 values = {_("No"), _("Yes"), _("Not build")},
                 defaultIndex = 0
+            },
+            {
+                key = "terrainToWalltop",
+                name = _("Terrain aligned to the walltop"),
+                values = {_("No"), _("Yes")},
+                defaultIndex = 0
             }
         })
         * pipe.filter(function(p) return not func.contains(paramFilter, p.key) end)
@@ -501,7 +507,7 @@ local updateFn = function(fParams, models)
                         rad = rad,
                         used = func.contains({0, 2}, params.transitionB),
                         isBridge = params.typeSlopeB == 0 or not func.contains({0, 2}, params.transitionB),
-                        isTerra = params.typeSlopeB == 1 and func.contains({0, 2}, params.transitionB) and params.type ~= 2,
+                        isTerra = params.typeSlopeB == 1 and func.contains({0, 2}, params.transitionB) and params.type == 1,
                         extR = (params.trSRadiusB == 0 and 1 or -1) * retriveR(params.trRadiusB)
                     }
                 }
@@ -765,7 +771,10 @@ local updateFn = function(fParams, models)
                     lowerPolys[part].polys,
                     ext.polys.lower[part].polys
                 },
-                greater = {
+                greater = params.terrainToWalltop == 1 and {
+                    lowerPolys[part].polys,
+                    ext.polys.lower[part].polysNoExt
+                } or {
                     lowerPolys[part].trackPolys,
                     ext.polys.lower[part].trackPolys
                 }

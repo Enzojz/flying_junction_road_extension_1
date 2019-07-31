@@ -16,6 +16,10 @@ ATTENTION:
 The flying junction mod is needed to use it.
 
 Changelog
+1.21
+* Added option to align terrain to the top of the wall
+1.20
+* Correction of terra holes on some configurations
 1.19
 * Added option to switch off/on free tracks and streets
 1.18
@@ -59,6 +63,8 @@ ATTENTION:
 Le mod "Saut de mouton" est exigé pour son utilisation.
 
 Changelog:
+1.20
+* Correction des trous dans la terre sur certain configurations
 1.19
 * Ajoute d'option de préférence aux voies à la modification libre.
 1.18
@@ -101,6 +107,10 @@ local descCN = [[本MOD提供建设各种形式立体道口和公路立交的可
 
 
 Changelog:
+1.21
+* 增加了让地形对齐到墙顶的选项
+1.20
+* 修正了一些配置下的空洞
 1.19
 * 增加了可以控制是否修改轨道的选项
 1.18
@@ -235,6 +245,7 @@ function data()
             ["Modern"] = "现代",
             ["Free tracks/streets"] = "可自由修改的轨道/街道",
             ["Not build"] = "不建造",
+            ["Terrain aligned to the walltop"] = "对齐地形到墙顶",
             
             ["Rail/Road Exchange Crossing"] = "换位立交道口",
             ["Rail/Road Crossing"] = "立交道口",
